@@ -1,37 +1,106 @@
 <!DOCTYPE html>
-
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>NGINX on Railway</title>
-    <meta name="description" content="Choo Choo!" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradePlatform Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { brand: { teal: '#1D9E75', dark: '#0D0D0F' } }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-[#0F172A] min-h-screen flex flex-col items-center justify-center px-6 py-16" style="font-family:'Inter',sans-serif;">
 
-    <link rel="icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <div class="text-center mb-14">
+        <div class="inline-flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 bg-brand-teal rounded-lg flex items-center justify-center">
+                <i data-lucide="bar-chart-3" class="text-white" style="width:22px;height:22px;"></i>
+            </div>
+            <span class="text-white text-2xl font-bold tracking-tight">TradePlatform</span>
+        </div>
 
-    <link rel="stylesheet" href="/styles.css?v=1.0" />
-  </head>
+        <p class="text-slate-400 text-lg max-w-md mx-auto">Thai commodity trading platform — explore all screens and flows.</p>
+    </div>
 
-  <body>
-    <main>
-      <img
-        src="https://railway.app/brand/logo-light.svg"
-        alt="Railway logo"
-        class="logo"
-      />
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl w-full">
 
-      <h1>NGINX on Railway</h1>
+        <a href="/landing.html" class="group block bg-[#1E293B] border border-white/[0.07] rounded-2xl p-7 hover:border-brand-teal/40 hover:bg-[#1E293B]/80 transition-all duration-200">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-12 h-12 rounded-xl bg-brand-teal/10 flex items-center justify-center">
+                    <i data-lucide="globe" style="width:24px;height:24px;color:#1D9E75;"></i>
+                </div>
+                <div>
+                    <h2 class="text-white text-lg font-bold">Landing Page</h2>
+                    <p class="text-slate-500 text-sm">Marketing & onboarding</p>
+                </div>
+            </div>
+            <p class="text-slate-400 text-sm leading-relaxed mb-5">Public-facing landing page with features overview, pricing, bilingual support, and AI assistant preview.</p>
+            <span class="inline-flex items-center gap-2 text-brand-teal text-sm font-semibold group-hover:gap-3 transition-all">
+                Open <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+            </span>
+        </a>
 
-      <p>
-        Choo Choo! This is an example of an NGINX static site running on
-        Railway.
-        <a
-          href="https://github.com/railwayapp/starters/tree/master/examples/nginx"
-          >View source</a
-        >.
-      </p>
-    </main>
+        <a href="/web-app.html" class="group block bg-[#1E293B] border border-white/[0.07] rounded-2xl p-7 hover:border-brand-teal/40 hover:bg-[#1E293B]/80 transition-all duration-200">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center">
+                    <i data-lucide="monitor" style="width:24px;height:24px;color:#6366F1;"></i>
+                </div>
+                <div>
+                    <h2 class="text-white text-lg font-bold">Web Application</h2>
+                    <p class="text-slate-500 text-sm">Desktop trading platform</p>
+                </div>
+            </div>
+            <p class="text-slate-400 text-sm leading-relaxed mb-5">Full trading dashboard with live markets, portfolio, wallet, AI assistant, KYC flow, and notifications.</p>
+            <span class="inline-flex items-center gap-2 text-indigo-400 text-sm font-semibold group-hover:gap-3 transition-all">
+                Open <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+            </span>
+        </a>
 
-    <script src="/script.js"></script>
-  </body>
+        <a href="/mobile.html" class="group block bg-[#1E293B] border border-white/[0.07] rounded-2xl p-7 hover:border-brand-teal/40 hover:bg-[#1E293B]/80 transition-all duration-200">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-12 h-12 rounded-xl bg-pink-500/10 flex items-center justify-center">
+                    <i data-lucide="smartphone" style="width:24px;height:24px;color:#EC4899;"></i>
+                </div>
+                <div>
+                    <h2 class="text-white text-lg font-bold">Mobile App</h2>
+                    <p class="text-slate-500 text-sm">iOS/Android prototype</p>
+                </div>
+            </div>
+            <p class="text-slate-400 text-sm leading-relaxed mb-5">Native mobile experience with onboarding, trading, market data, alerts, and wallet management.</p>
+            <span class="inline-flex items-center gap-2 text-pink-400 text-sm font-semibold group-hover:gap-3 transition-all">
+                Open <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+            </span>
+        </a>
+
+        <a href="/dashboard.html" class="group block bg-[#1E293B] border border-white/[0.07] rounded-2xl p-7 hover:border-brand-teal/40 hover:bg-[#1E293B]/80 transition-all duration-200">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                    <i data-lucide="shield" style="width:24px;height:24px;color:#F59E0B;"></i>
+                </div>
+                <div>
+                    <h2 class="text-white text-lg font-bold">Admin Dashboard</h2>
+                    <p class="text-slate-500 text-sm">Back-office management</p>
+                </div>
+            </div>
+            <p class="text-slate-400 text-sm leading-relaxed mb-5">Admin panel with user management, KYC review, orders, reports, content CMS, RBAC, and audit logs.</p>
+            <span class="inline-flex items-center gap-2 text-amber-400 text-sm font-semibold group-hover:gap-3 transition-all">
+                Open <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+            </span>
+        </a>
+
+    </div>
+
+    <p class="text-slate-600 text-xs mt-14">DEMO — All data is mocked. No real transactions.</p>
+
+    <script>lucide.createIcons();</script>
+</body>
 </html>

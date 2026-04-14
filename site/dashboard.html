@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradePlatform Admin Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        sidebar: '#0D0D0F',
+                        header: '#111827',
+                        content: '#F9FAFB',
+                        teal: { 400: '#2dd4bf', 500: '#14b8a6', 600: '#0d9488' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .drawer-open { transform: translateX(0%); }
+        .drawer-closed { transform: translateX(100%); }
+        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .slide-up { animation: slideUp 0.3s ease-out forwards; }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .donut-chart {
+            background: conic-gradient(#F59E0B 0% 45%, #0284C7 45% 70%, #94A3B8 70% 85%, #E2E8F0 85% 100%);
+            border-radius: 50%;
+            position: relative;
+        }
+        .donut-hole {
+            background: #ffffff;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 65%; height: 65%;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .tab-active { border-bottom-width: 2px; border-color: #14b8a6; color: #0d9488; }
+        .tab-inactive { color: #6b7280; }
+        .tab-inactive:hover { color: #1f2937; }
+    </style>
+</head>
+<body class="bg-content text-gray-800 overflow-hidden">
+
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[100] flex flex-col gap-2 pointer-events-none"></div>
+
+    <div id="view-0" class="fixed inset-0 z-[200] bg-[#0F172A] flex items-center justify-center transition-opacity duration-300">
+        <div class="bg-header border border-gray-700 rounded-xl shadow-2xl p-8 w-[400px]">
+            <div class="flex items-center justify-center gap-2 mb-8">
+                <span class="w-3 h-3 rounded-full bg-teal-500"></span>
+                <h1 class="text-white text-2xl font-bold tracking-tight">TradePlatform</h1>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Email address</label>
+                    <input type="email" value="admin@platform.co" class="w-full bg-[#1E293B] border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-teal-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Password</label>
+                    <input type="password" value="password123" class="w-full bg-[#1E293B] border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-teal-500">
+                </div>
+                <button onclick="login()" class="w-full bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2.5 rounded-lg transition-colors mt-4 shadow-lg shadow-teal-500/20">
+                    Sign in to Admin
+                </button>
+            </div>
+            <p class="text-xs text-gray-500 text-center mt-6">DEMO MODE — Accept any credentials</p>
+        </div>
+    </div>
+
+    <div id="app" class="hidden h-screen w-full flex">
+        
+        <aside class="w-[240px] bg-sidebar text-gray-400 flex flex-col h-full flex-shrink-0 z-40 border-r border-gray-800">
+            <div class="h-[60px] flex items-center px-6 border-b border-gray-800">
+                <span class="w-2.5 h-2.5 rounded-full bg-teal-500 mr-3 shadow-[0_0_8px_rgba(20,184,166,0.8)]"></span>
+                <span class="text-white font-bold tracking-wide">TradePlatform</span>
+            </div>
+            <nav class="flex-1 py-4 flex flex-col gap-1 px-3" id="nav-menu">
+                </nav>
+            <div class="p-4 border-t border-gray-800 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-teal-600 text-white flex items-center justify-center font-semibold text-sm">AD</div>
+                <div class="flex flex-col">
+                    <span class="text-sm text-white font-medium">Admin User</span>
+                    <span class="text-xs text-teal-400 bg-teal-500/10 px-1.5 py-0.5 rounded w-max mt-0.5">Super Admin</span>
+                </div>
+            </div>
+        </aside>
+
+        <div class="flex-1 flex flex-col h-full min-w-[1040px] relative">
+            
+            <header class="h-[60px] bg-header flex items-center justify-between px-6 z-30 border-b border-gray-800">
+                <div class="flex items-center gap-4">
+                    <h2 id="header-title" class="text-white font-semibold text-lg">Dashboard</h2>
+                    <span class="text-xs font-medium text-amber-500 bg-amber-500/10 px-2 py-1 rounded">DEMO — Mocked Data · All actions are simulated</span>
+                </div>
+                <div class="flex items-center gap-6">
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-gray-400 text-sm"><i data-lucide="search" style="width:16px;height:16px;"></i></span>
+                        <input type="text" placeholder="Search platform..." class="w-[300px] bg-[#1E293B] border border-gray-700 text-sm text-white rounded-md pl-9 pr-4 py-2 focus:outline-none focus:border-teal-500 transition-colors">
+                    </div>
+                    <div class="relative cursor-pointer hover:text-teal-400 transition-colors text-white">
+                        <span class="text-xl"><i data-lucide="bell" style="width:20px;height:20px;"></i></span>
+                        <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-header">3</span>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-6" id="content-area">
+                
+                <div id="view-1" class="view-panel space-y-6">
+                    <div class="grid grid-cols-4 gap-4">
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm"><p class="text-sm text-gray-500 font-medium">Total Users</p><p class="text-2xl font-bold text-gray-900 mt-1">12,450</p></div>
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm"><p class="text-sm text-gray-500 font-medium">Active Trades Today</p><p class="text-2xl font-bold text-gray-900 mt-1">342</p></div>
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm"><p class="text-sm text-gray-500 font-medium">Revenue Today</p><p class="text-2xl font-bold text-gray-900 mt-1">฿71,250</p></div>
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm"><p class="text-sm text-gray-500 font-medium">Pending KYC</p><p class="text-2xl font-bold text-amber-600 mt-1" id="dash-kyc-count">5</p></div>
+                    </div>
+
+                    <div class="flex gap-6">
+                        <div class="w-[60%] bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                            <h3 class="font-semibold text-gray-800 mb-4">Revenue (last 7 days)</h3>
+                            <svg viewBox="0 0 500 200" class="w-full h-[200px] overflow-visible">
+                                <line x1="0" y1="200" x2="500" y2="200" stroke="#e2e8f0" stroke-width="2"/>
+                                <line x1="0" y1="0" x2="0" y2="200" stroke="#e2e8f0" stroke-width="2"/>
+                                <line x1="0" y1="50" x2="500" y2="50" stroke="#f1f5f9" stroke-width="1"/>
+                                <line x1="0" y1="100" x2="500" y2="100" stroke="#f1f5f9" stroke-width="1"/>
+                                <line x1="0" y1="150" x2="500" y2="150" stroke="#f1f5f9" stroke-width="1"/>
+                                <polyline points="0,105 83,115 166,80 250,90 333,40 416,55 500,20" fill="none" stroke="#14b8a6" stroke-width="3"/>
+                                <circle cx="0" cy="105" r="4" fill="#14b8a6"/> <circle cx="83" cy="115" r="4" fill="#14b8a6"/>
+                                <circle cx="166" cy="80" r="4" fill="#14b8a6"/> <circle cx="250" cy="90" r="4" fill="#14b8a6"/>
+                                <circle cx="333" cy="40" r="4" fill="#14b8a6"/> <circle cx="416" cy="55" r="4" fill="#14b8a6"/> <circle cx="500" cy="20" r="4" fill="#14b8a6"/>
+                                <text x="0" y="220" font-size="10" fill="#64748b" text-anchor="middle">Mon</text>
+                                <text x="83" y="220" font-size="10" fill="#64748b" text-anchor="middle">Tue</text>
+                                <text x="166" y="220" font-size="10" fill="#64748b" text-anchor="middle">Wed</text>
+                                <text x="250" y="220" font-size="10" fill="#64748b" text-anchor="middle">Thu</text>
+                                <text x="333" y="220" font-size="10" fill="#64748b" text-anchor="middle">Fri</text>
+                                <text x="416" y="220" font-size="10" fill="#64748b" text-anchor="middle">Sat</text>
+                                <text x="500" y="220" font-size="10" fill="#64748b" text-anchor="middle">Sun</text>
+                            </svg>
+                        </div>
+                        <div class="w-[40%] flex flex-col gap-6">
+                            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-semibold text-gray-800 mb-2">Trade Volume</h3>
+                                    <ul class="text-sm space-y-1">
+                                        <li class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#F59E0B]"></span> Gold 45%</li>
+                                        <li class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#0284C7]"></span> Oil 25%</li>
+                                        <li class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#94A3B8]"></span> Silver 15%</li>
+                                        <li class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#E2E8F0]"></span> Others 15%</li>
+                                    </ul>
+                                </div>
+                                <div class="w-[120px] h-[120px] donut-chart"><div class="donut-hole"></div></div>
+                            </div>
+                            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex-1">
+                                <h3 class="font-semibold text-gray-800 mb-3 text-sm flex justify-between items-center">
+                                    Live Trade Feed <span class="flex h-2 w-2 relative"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span></span>
+                                </h3>
+                                <div id="live-feed-container" class="space-y-2 overflow-hidden h-[100px]"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+                        <div class="px-6 py-4 border-b border-gray-200"><h3 class="font-semibold text-gray-800">Recent Orders</h3></div>
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                                <tr><th class="px-6 py-3">Order ID</th><th class="px-6 py-3">User</th><th class="px-6 py-3">Asset</th><th class="px-6 py-3">Type</th><th class="px-6 py-3">Total</th><th class="px-6 py-3">Status</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200" id="dash-orders-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="view-2" class="view-panel hidden space-y-4">
+                    <div class="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <div class="flex gap-4">
+                            <input type="text" placeholder="Search users..." class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:border-teal-500 focus:outline-none w-64">
+                            <select class="border border-gray-300 rounded-md px-3 py-1.5 text-sm outline-none"><option>All KYC Status</option><option>Verified</option><option>Pending</option></select>
+                            <select class="border border-gray-300 rounded-md px-3 py-1.5 text-sm outline-none"><option>All Accounts</option><option>Active</option><option>Suspended</option></select>
+                        </div>
+                        <button onclick="showToast('CSV Exported Successfully')" class="border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 px-4 py-1.5 rounded-md text-sm font-medium transition-colors">Export CSV</button>
+                    </div>
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                                <tr><th class="px-6 py-3">User</th><th class="px-6 py-3">Contact</th><th class="px-6 py-3">KYC</th><th class="px-6 py-3">Status</th><th class="px-6 py-3">Joined</th><th class="px-6 py-3 text-right">Actions</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200" id="users-table"></tbody>
+                        </table>
+                        <div class="px-6 py-3 border-t border-gray-200 flex items-center justify-between bg-gray-50 text-sm text-gray-500">
+                            <span>Showing 1–8 of 12,450 users</span>
+                            <div class="flex gap-2">
+                                <button class="px-3 py-1 border rounded bg-white text-gray-400 cursor-not-allowed">Previous</button>
+                                <button class="px-3 py-1 border rounded bg-white hover:bg-gray-100 text-gray-700 transition">Next</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-3" class="view-panel hidden h-[calc(100vh-110px)] flex gap-6">
+                    <div class="w-[340px] bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col overflow-hidden">
+                        <div class="flex border-b border-gray-200 text-xs font-medium bg-gray-50" id="kyc-tabs">
+                            <div class="flex-1 text-center py-3 cursor-pointer tab-active" onclick="filterKyc('Pending')">Pending (<span id="kyc-tab-count">5</span>)</div>
+                            <div class="flex-1 text-center py-3 cursor-pointer tab-inactive" onclick="filterKyc('Approved')">Approved</div>
+                            <div class="flex-1 text-center py-3 cursor-pointer tab-inactive" onclick="filterKyc('Rejected')">Rejected</div>
+                        </div>
+                        <div class="flex-1 overflow-y-auto" id="kyc-list"></div>
+                    </div>
+                    <div class="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex flex-col relative" id="kyc-detail">
+                        </div>
+                </div>
+
+                <div id="view-4" class="view-panel hidden space-y-4">
+                    <div class="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <div class="flex gap-4">
+                            <input type="date" class="border border-gray-300 rounded-md px-3 py-1.5 text-sm outline-none text-gray-600">
+                            <select class="border border-gray-300 rounded-md px-3 py-1.5 text-sm outline-none"><option>All Assets</option><option>Gold</option><option>Oil</option></select>
+                            <select class="border border-gray-300 rounded-md px-3 py-1.5 text-sm outline-none"><option>Type: All</option><option>Buy</option><option>Sell</option></select>
+                        </div>
+                        <button onclick="showToast('Exported Orders to CSV')" class="border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 px-4 py-1.5 rounded-md text-sm font-medium transition">Export CSV</button>
+                    </div>
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                                <tr><th class="px-6 py-3">Order ID</th><th class="px-6 py-3">User</th><th class="px-6 py-3">Asset</th><th class="px-6 py-3">Type</th><th class="px-6 py-3">Qty</th><th class="px-6 py-3">Price</th><th class="px-6 py-3">Status</th><th class="px-6 py-3">Time</th><th class="px-6 py-3"></th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200" id="orders-table"></tbody>
+                        </table>
+                        <div class="px-6 py-3 border-t border-gray-200 text-sm text-gray-500 bg-gray-50 text-center">
+                            Showing 1–10 of 1,284 orders
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-5" class="view-panel hidden space-y-6">
+                    <div class="flex justify-between items-center">
+                        <div class="flex bg-white rounded-lg border border-gray-200 p-1 text-sm">
+                            <button class="px-3 py-1 text-gray-500 hover:text-gray-800">Today</button>
+                            <button class="px-3 py-1 bg-gray-100 text-gray-800 rounded font-medium shadow-sm">7D</button>
+                            <button class="px-3 py-1 text-gray-500 hover:text-gray-800">30D</button>
+                            <button class="px-3 py-1 text-gray-500 hover:text-gray-800">90D</button>
+                        </div>
+                        <div class="gap-2 flex">
+                            <button onclick="showToast('Exported Report PDF')" class="bg-white hover:bg-gray-50 border border-gray-300 px-4 py-2 rounded-md text-sm font-medium text-gray-700 shadow-sm transition">Export PDF</button>
+                            <button onclick="showToast('Exported Report CSV')" class="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-md text-sm font-medium shadow-sm transition">Export CSV</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-4 gap-4">
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm"><p class="text-sm text-gray-500">Total Volume</p><p class="text-2xl font-bold mt-1">฿1,204,500</p></div>
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm"><p class="text-sm text-gray-500">Total Revenue</p><p class="text-2xl font-bold mt-1 text-teal-600">฿48,200</p></div>
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm"><p class="text-sm text-gray-500">Avg Trade Size</p><p class="text-2xl font-bold mt-1">฿9,640</p></div>
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm"><p class="text-sm text-gray-500">Unique Traders</p><p class="text-2xl font-bold mt-1">342</p></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                            <h3 class="font-semibold text-gray-800 mb-4">Revenue Breakdown</h3>
+                            <svg viewBox="0 0 400 150" class="w-full h-[180px] overflow-visible">
+                                <line x1="0" y1="150" x2="400" y2="150" stroke="#e2e8f0" stroke-width="1"/>
+                                <rect x="20" y="80" width="30" height="70" fill="#3b82f6" rx="2"/> <rect x="75" y="90" width="30" height="60" fill="#3b82f6" rx="2"/>
+                                <rect x="130" y="50" width="30" height="100" fill="#3b82f6" rx="2"/> <rect x="185" y="60" width="30" height="90" fill="#3b82f6" rx="2"/>
+                                <rect x="240" y="30" width="30" height="120" fill="#3b82f6" rx="2"/> <rect x="295" y="40" width="30" height="110" fill="#3b82f6" rx="2"/>
+                                <rect x="350" y="10" width="30" height="140" fill="#3b82f6" rx="2"/>
+                            </svg>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                            <h3 class="font-semibold text-gray-800 mb-4">Trade Activity (Count)</h3>
+                            <svg viewBox="0 0 400 150" class="w-full h-[180px] overflow-visible">
+                                <line x1="0" y1="150" x2="400" y2="150" stroke="#e2e8f0" stroke-width="1"/>
+                                <polyline points="20,120 75,100 130,130 185,80 240,60 295,40 350,20" fill="none" stroke="#f59e0b" stroke-width="3"/>
+                                <circle cx="20" cy="120" r="4" fill="#f59e0b"/> <circle cx="75" cy="100" r="4" fill="#f59e0b"/> <circle cx="130" cy="130" r="4" fill="#f59e0b"/>
+                                <circle cx="185" cy="80" r="4" fill="#f59e0b"/> <circle cx="240" cy="60" r="4" fill="#f59e0b"/> <circle cx="295" cy="40" r="4" fill="#f59e0b"/>
+                                <circle cx="350" cy="20" r="4" fill="#f59e0b"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-6">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                                <tr><th class="px-6 py-3">Asset</th><th class="px-6 py-3">Buy Vol</th><th class="px-6 py-3">Sell Vol</th><th class="px-6 py-3">Net Revenue</th><th class="px-6 py-3"># Trades</th><th class="px-6 py-3">Avg Price</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200" id="reports-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="view-6" class="view-panel hidden h-[calc(100vh-110px)] bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col">
+                    <div class="flex border-b border-gray-200 px-6 pt-4 gap-6 text-sm font-medium" id="notif-tabs">
+                        <div class="pb-3 cursor-pointer tab-active" onclick="switchNotifTab('compose')">Compose</div>
+                        <div class="pb-3 cursor-pointer tab-inactive" onclick="switchNotifTab('templates')">Templates</div>
+                        <div class="pb-3 cursor-pointer tab-inactive" onclick="switchNotifTab('history')">History</div>
+                    </div>
+                    
+                    <div id="notif-compose" class="flex-1 flex p-6 gap-12 fade-in">
+                        <div class="w-[500px] space-y-5">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Audience</label>
+                                <div class="flex gap-4">
+                                    <label class="flex items-center gap-2 text-sm"><input type="radio" name="aud" checked class="accent-teal-500"> All Users</label>
+                                    <label class="flex items-center gap-2 text-sm"><input type="radio" name="aud" class="accent-teal-500"> Segment</label>
+                                    <label class="flex items-center gap-2 text-sm"><input type="radio" name="aud" class="accent-teal-500"> Single User</label>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1 flex justify-between">Title <span class="text-xs text-gray-400 font-normal">Max 50</span></label>
+                                <input type="text" id="notif-title-input" value="Platform Update" oninput="updateNotifPreview()" maxlength="50" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm outline-none focus:border-teal-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1 flex justify-between">Message Body <span class="text-xs text-gray-400 font-normal">Max 100</span></label>
+                                <textarea id="notif-body-input" rows="4" oninput="updateNotifPreview()" maxlength="100" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm outline-none focus:border-teal-500 resize-none">We've added new trading pairs. Check them out!</textarea>
+                            </div>
+                            <div class="flex items-center gap-4 pt-4 border-t border-gray-100">
+                                <button onclick="sendNotification()" class="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2 rounded-md font-medium text-sm shadow-sm transition-colors">Send Notification</button>
+                                <label class="flex items-center gap-2 text-sm text-gray-600"><input type="checkbox" class="accent-teal-500"> Schedule</label>
+                            </div>
+                        </div>
+                        <div class="flex-1 flex justify-center items-center bg-gray-50 rounded-xl border border-gray-100 p-6">
+                            <div class="w-[280px] h-[580px] border-[10px] border-gray-900 rounded-[2.5rem] bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-gray-200 overflow-hidden relative shadow-2xl">
+                                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[120px] h-[24px] bg-gray-900 rounded-b-xl z-10"></div>
+                                <div class="mt-16 mx-3 bg-white/90 backdrop-blur-sm rounded-2xl p-3 shadow-lg slide-up">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <div class="w-5 h-5 bg-teal-500 rounded flex items-center justify-center text-white text-[10px]">TP</div>
+                                        <span class="text-xs font-semibold text-gray-800">TradePlatform</span>
+                                        <span class="text-[10px] text-gray-400 ml-auto">Now</span>
+                                    </div>
+                                    <p id="notif-title-preview" class="text-sm font-bold text-gray-900 leading-tight">Platform Update</p>
+                                    <p id="notif-body-preview" class="text-xs text-gray-600 mt-1 leading-snug">We've added new trading pairs. Check them out!</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="notif-templates" class="hidden flex-1 p-6 fade-in">
+                        <div class="grid grid-cols-3 gap-6" id="notif-templates-container"></div>
+                    </div>
+
+                    <div id="notif-history" class="hidden flex-1 overflow-y-auto fade-in">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="bg-gray-50 text-gray-500 uppercase text-xs sticky top-0">
+                                <tr><th class="px-6 py-3">Date</th><th class="px-6 py-3">Title</th><th class="px-6 py-3">Audience Size</th><th class="px-6 py-3">Delivered</th><th class="px-6 py-3">Open Rate</th><th class="px-6 py-3">Status</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200" id="notif-history-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="view-7" class="view-panel hidden flex gap-6 h-[calc(100vh-110px)]">
+                    <div class="w-[240px] flex flex-col gap-1" id="content-sidebar">
+                        <button onclick="switchContentTab('faq')" class="text-left px-4 py-2 bg-white rounded-lg shadow-sm border border-gray-200 font-medium text-teal-600 text-sm">FAQ</button>
+                        <button onclick="switchContentTab('tos')" class="text-left px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm transition">Terms of Service</button>
+                        <button onclick="switchContentTab('privacy')" class="text-left px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm transition">Privacy Policy</button>
+                    </div>
+                    <div class="flex-1 bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col">
+                        
+                        <div id="content-faq" class="fade-in flex flex-col h-full">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="font-semibold text-lg">Frequently Asked Questions</h3>
+                                <button onclick="addFaq()" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-1.5 rounded-md text-sm font-medium">Add FAQ</button>
+                            </div>
+                            <div class="space-y-3 flex-1 overflow-y-auto" id="faq-list"></div>
+                            <div class="mt-6 pt-4 border-t border-gray-100">
+                                <button onclick="showToast('FAQ Changes Saved!')" class="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2 rounded-md text-sm font-medium shadow-sm transition">Save Changes</button>
+                            </div>
+                        </div>
+
+                        <div id="content-tos" class="hidden fade-in flex flex-col h-full">
+                            <h3 class="font-semibold text-lg mb-4">Terms of Service</h3>
+                            <textarea class="flex-1 border border-gray-300 rounded-lg p-4 text-sm focus:outline-none focus:border-teal-500 resize-none w-full" spellcheck="false">Full Terms of Service content here...
+1. Acceptance of Terms
+2. User Responsibilities
+3. Trading Risks
+...</textarea>
+                            <div class="mt-6 pt-4 border-t border-gray-100 flex gap-3">
+                                <button onclick="showToast('Draft Saved')" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-6 py-2 rounded-md text-sm font-medium">Save Draft</button>
+                                <button onclick="showToast('Terms of Service Published!')" class="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2 rounded-md text-sm font-medium shadow-sm transition">Publish</button>
+                            </div>
+                        </div>
+
+                        <div id="content-privacy" class="hidden fade-in flex flex-col h-full">
+                            <h3 class="font-semibold text-lg mb-4">Privacy Policy</h3>
+                            <textarea class="flex-1 border border-gray-300 rounded-lg p-4 text-sm focus:outline-none focus:border-teal-500 resize-none w-full" spellcheck="false">Full Privacy Policy content here...
+1. Data Collection
+2. How We Use Data
+3. KYC Processing
+...</textarea>
+                            <div class="mt-6 pt-4 border-t border-gray-100 flex gap-3">
+                                <button onclick="showToast('Draft Saved')" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-6 py-2 rounded-md text-sm font-medium">Save Draft</button>
+                                <button onclick="showToast('Privacy Policy Published!')" class="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2 rounded-md text-sm font-medium shadow-sm transition">Publish</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div id="view-8" class="view-panel hidden space-y-6">
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                            <h3 class="font-semibold text-gray-800">Admin Users</h3>
+                            <button onclick="showToast('Invite link generated')" class="bg-teal-500 text-white px-4 py-2 text-sm font-medium rounded shadow-sm hover:bg-teal-600 transition">+ Invite Admin</button>
+                        </div>
+                        <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="bg-white text-gray-500 uppercase text-xs border-b border-gray-200">
+                                <tr><th class="px-6 py-3">Admin</th><th class="px-6 py-3">Email</th><th class="px-6 py-3">Role</th><th class="px-6 py-3">Last Active</th><th class="px-6 py-3">Status</th><th class="px-6 py-3">Actions</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100" id="rbac-table"></tbody>
+                        </table>
+                    </div>
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto p-4">
+                        <h3 class="font-semibold text-gray-800 mb-4 px-2">Role Permission Matrix</h3>
+                        <table class="w-full text-center text-sm">
+                            <thead class="text-gray-500 text-xs border-b">
+                                <tr><th class="text-left pb-2 w-32">Role</th><th>Dashboard</th><th>Users</th><th>KYC</th><th>Orders</th><th>Reports</th><th>Notifications</th><th>Content</th><th>Audit Logs</th></tr>
+                            </thead>
+                            <tbody class="divide-y text-gray-700">
+                                <tr><td class="text-left py-3 font-medium">Super Admin</td><td><span class="text-teal-500 font-bold">✓ W</span></td><td><span class="text-teal-500 font-bold">✓ W</span></td><td><span class="text-teal-500 font-bold">✓ W</span></td><td><span class="text-teal-500 font-bold">✓ W</span></td><td><span class="text-teal-500 font-bold">✓ W</span></td><td><span class="text-teal-500 font-bold">✓ W</span></td><td><span class="text-teal-500 font-bold">✓ W</span></td><td><span class="text-green-500">✓ R</span></td></tr>
+                                <tr><td class="text-left py-3 font-medium">Operations</td><td><span class="text-green-500">✓ R</span></td><td><span class="text-green-500">✓ R</span></td><td>—</td><td><span class="text-teal-500 font-bold">✓ W</span></td><td><span class="text-green-500">✓ R</span></td><td><span class="text-teal-500 font-bold">✓ W</span></td><td>—</td><td>—</td></tr>
+                                <tr><td class="text-left py-3 font-medium">Compliance</td><td><span class="text-green-500">✓ R</span></td><td><span class="text-green-500">✓ R</span></td><td><span class="text-teal-500 font-bold">✓ W</span></td><td><span class="text-green-500">✓ R</span></td><td>—</td><td>—</td><td>—</td><td><span class="text-green-500">✓ R</span></td></tr>
+                                <tr><td class="text-left py-3 font-medium">Support</td><td><span class="text-green-500">✓ R</span></td><td><span class="text-green-500">✓ R</span></td><td>—</td><td><span class="text-green-500">✓ R</span></td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="view-9" class="view-panel hidden space-y-4">
+                    <div class="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+                        <span>ℹ️</span> This log is read-only. Secure immutability enforced. No entries can be edited or deleted.
+                    </div>
+                    <div class="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <div class="flex gap-4">
+                            <input type="text" placeholder="Search by admin email..." class="border border-gray-300 rounded-md px-3 py-1.5 text-sm w-64 outline-none focus:border-teal-500">
+                            <select class="border border-gray-300 rounded-md px-3 py-1.5 text-sm outline-none"><option>All Actions</option><option>APPROVE</option><option>UPDATE</option><option>LOGIN</option></select>
+                        </div>
+                        <button onclick="showToast('Exported Audit Log')" class="border border-gray-300 bg-white text-gray-700 px-4 py-1.5 rounded-md text-sm font-medium hover:bg-gray-50 transition">Export CSV</button>
+                    </div>
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                                <tr><th class="px-6 py-3">Timestamp</th><th class="px-6 py-3">Admin</th><th class="px-6 py-3">Action</th><th class="px-6 py-3">Module</th><th class="px-6 py-3">Target Entity</th><th class="px-6 py-3">IP Address</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 font-mono text-xs" id="audit-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <div id="drawer-backdrop" class="hidden fixed inset-0 bg-black/30 z-[150] transition-opacity backdrop-blur-sm" onclick="closeDrawer()"></div>
+    
+    <div id="drawer-panel" class="fixed top-0 right-0 h-full w-[450px] bg-white shadow-2xl z-[160] drawer-closed transition-transform duration-300 flex flex-col">
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+            <h2 id="drawer-title" class="font-semibold text-lg text-gray-800">Detail View</h2>
+            <button onclick="closeDrawer()" class="text-gray-400 hover:text-gray-700 text-2xl leading-none">&times;</button>
+        </div>
+        <div id="drawer-content" class="p-6 flex-1 overflow-y-auto"></div>
+    </div>
+
+    <script>
+        // --- DATA MOCKING ---
+        const usersData = [
+            { id: 1, name: "Somchai Thongdee", email: "somchai@email.com", phone: "+66812345678", kyc: "Verified", status: "Active", joined: "2026-01-15", bal: 48320, trades: 12 },
+            { id: 2, name: "Nattaporn Kaewsai", email: "nattaporn@email.com", phone: "+66823456789", kyc: "Pending", status: "Active", joined: "2026-02-03", bal: 1500, trades: 0 },
+            { id: 3, name: "Preecha Sirisak", email: "preecha@email.com", phone: "+66834567890", kyc: "Rejected", status: "Suspended", joined: "2026-02-18", bal: 0, trades: 3 },
+            { id: 4, name: "Malee Jaidee", email: "malee@email.com", phone: "+66845678901", kyc: "Verified", status: "Active", joined: "2026-03-01", bal: 124000, trades: 45 },
+            { id: 5, name: "Thanawat Booncherd", email: "thanawat@email.com", phone: "+66856789012", kyc: "Not Started", status: "Active", joined: "2026-03-22", bal: 0, trades: 0 },
+            { id: 6, name: "Wipada Thana", email: "wipada@email.com", phone: "+66867890123", kyc: "Verified", status: "Active", joined: "2026-04-01", bal: 5400, trades: 5 },
+            { id: 7, name: "Krit Saengchan", email: "krit@email.com", phone: "+66878901234", kyc: "Pending", status: "Active", joined: "2026-04-05", bal: 0, trades: 0 },
+            { id: 8, name: "Anchalee Phomma", email: "anchalee@email.com", phone: "+66889012345", kyc: "Verified", status: "Active", joined: "2026-04-08", bal: 8900, trades: 2 }
+        ];
+
+        let kycData = [
+            { id: 2, name: "Nattaporn Kaewsai", doc: "National ID", date: "2026-04-09", prio: "Normal", email: "nattaporn@email.com", status: "Pending" },
+            { id: 7, name: "Krit Saengchan", doc: "Passport", date: "2026-04-08", prio: "High", email: "krit@email.com", status: "Pending" },
+            { id: 10, name: "John Doe", doc: "Driver License", date: "2026-04-07", prio: "Normal", email: "john@email.com", status: "Pending" },
+            { id: 11, name: "Jane Smith", doc: "National ID", date: "2026-04-07", prio: "Normal", email: "jane@email.com", status: "Pending" },
+            { id: 12, name: "Alex Wong", doc: "Passport", date: "2026-04-06", prio: "Low", email: "alex@email.com", status: "Pending" },
+            { id: 1, name: "Somchai Thongdee", doc: "National ID", date: "2026-01-14", prio: "Normal", email: "somchai@email.com", status: "Approved" },
+            { id: 3, name: "Preecha Sirisak", doc: "Passport", date: "2026-02-17", prio: "High", email: "preecha@email.com", status: "Rejected" }
+        ];
+
+        let ordersData = [
+            { id: "TH20260410-0042", user: "Somchai", asset: "Gold", type: "Buy", qty: "1 unit", price: 92450, status: "Filled", time: "2026-04-10 09:14" },
+            { id: "TH20260410-0041", user: "Malee", asset: "Silver", type: "Sell", qty: "20 units", price: 24960, status: "Filled", time: "2026-04-10 09:02" },
+            { id: "TH20260410-0040", user: "Wipada", asset: "Crude Oil", type: "Buy", qty: "5 units", price: 14455, status: "Pending", time: "2026-04-10 08:55" },
+            { id: "TH20260410-0039", user: "Somchai", asset: "Palm Oil", type: "Buy", qty: "3 units", price: 9381, status: "Filled", time: "2026-04-09 16:30" },
+            { id: "TH20260410-0038", user: "Krit", asset: "Gold", type: "Sell", qty: "0.5 units", price: 46225, status: "Cancelled", time: "2026-04-09 14:12" },
+            { id: "TH20260409-0037", user: "Anchalee", asset: "Silver", type: "Buy", qty: "10 units", price: 12480, status: "Filled", time: "2026-04-09 11:20" },
+            { id: "TH20260409-0036", user: "Malee", asset: "Gold", type: "Buy", qty: "2 units", price: 184900, status: "Filled", time: "2026-04-09 10:05" },
+            { id: "TH20260408-0035", user: "Preecha", asset: "Crude Oil", type: "Sell", qty: "2 units", price: 5780, status: "Failed", time: "2026-04-08 15:45" },
+            { id: "TH20260408-0034", user: "Wipada", asset: "Gold", type: "Buy", qty: "0.1 units", price: 9245, status: "Filled", time: "2026-04-08 09:30" },
+            { id: "TH20260407-0033", user: "Somchai", asset: "Silver", type: "Sell", qty: "50 units", price: 62400, status: "Filled", time: "2026-04-07 14:10" }
+        ];
+
+        const reportsData = [
+            { asset: "Gold", buyVol: "฿540,200", sellVol: "฿210,000", net: "฿12,450", trades: 142, avg: "฿92,450" },
+            { asset: "Silver", buyVol: "฿120,400", sellVol: "฿150,000", net: "฿4,320", trades: 89, avg: "฿1,248" },
+            { asset: "Crude Oil", buyVol: "฿210,000", sellVol: "฿180,000", net: "฿18,200", trades: 112, avg: "฿2,891" },
+            { asset: "Palm Oil", buyVol: "฿45,000", sellVol: "฿32,000", net: "฿2,100", trades: 45, avg: "฿3,127" },
+            { asset: "Platinum", buyVol: "฿85,000", sellVol: "฿12,000", net: "฿8,900", trades: 21, avg: "฿42,500" },
+            { asset: "Copper", buyVol: "฿12,000", sellVol: "฿8,000", net: "฿1,200", trades: 14, avg: "฿340" }
+        ];
+
+        const notifTemplates = [
+            { title: "Trade Confirmed", body: "Your recent trade has been executed successfully. View details in your portfolio." },
+            { title: "KYC Approved", body: "Good news! Your identity verification is complete. You can now trade without limits." },
+            { title: "Price Alert", body: "An asset on your watchlist has experienced high volatility in the last hour." }
+        ];
+
+        const notifHistory = [
+            { date: "2026-04-09 14:00", title: "System Maintenance", aud: "12,450", del: "12,400", open: "45%", status: "Sent" },
+            { date: "2026-04-05 09:30", title: "New Feature: Limit Orders", aud: "12,120", del: "12,100", open: "62%", status: "Sent" },
+            { date: "2026-04-01 10:00", title: "April Trading Competition", aud: "11,800", del: "11,750", open: "58%", status: "Sent" }
+        ];
+
+        let faqsData = [
+            "How do I fund my account?", "What are the trading fees?", "How long does KYC verification take?", 
+            "Can I withdraw to a different bank account?", "What happens if a trade fails?", "How do I reset my password?"
+        ];
+
+        const rbacUsers = [
+            { id: 1, name: "Admin User", email: "admin@platform.co", role: "Super Admin", lastActive: "Just now", status: "Active", immutable: true },
+            { id: 2, name: "Sara Smith", email: "sara@platform.co", role: "Operations", lastActive: "1 hour ago", status: "Active", immutable: false },
+            { id: 3, name: "Mike Johnson", email: "mike@platform.co", role: "Compliance", lastActive: "2 days ago", status: "Suspended", immutable: false },
+            { id: 4, name: "Emma Wong", email: "emma@platform.co", role: "Support", lastActive: "5 mins ago", status: "Active", immutable: false }
+        ];
+
+        const auditLogsData = [
+            { time: "2026-04-10 09:20:15", admin: "admin@platform.co", act: "APPROVE", mod: "KYC", target: "User #4 Malee", ip: "203.0.113.42" },
+            { time: "2026-04-10 09:15:02", admin: "admin@platform.co", act: "UPDATE", mod: "User", target: "Suspended #3 Preecha", ip: "203.0.113.42" },
+            { time: "2026-04-10 08:30:00", admin: "admin@platform.co", act: "LOGIN", mod: "Auth", target: "System", ip: "203.0.113.42" },
+            { time: "2026-04-09 16:45:11", admin: "sara@platform.co", act: "REJECT", mod: "KYC", target: "User #3 Preecha", ip: "198.51.100.14" },
+            { time: "2026-04-09 11:20:05", admin: "admin@platform.co", act: "UPDATE", mod: "Content", target: "FAQ Entry #4", ip: "203.0.113.42" },
+            { time: "2026-04-08 14:10:00", admin: "sara@platform.co", act: "CREATE", mod: "Notification", target: "All Users Msg", ip: "198.51.100.14" },
+            { time: "2026-04-07 09:05:22", admin: "admin@platform.co", act: "APPROVE", mod: "KYC", target: "User #1 Somchai", ip: "203.0.113.42" },
+            { time: "2026-04-07 08:50:15", admin: "admin@platform.co", act: "LOGIN", mod: "Auth", target: "System", ip: "203.0.113.42" }
+        ];
+
+        const navItems = [
+            { id: 1, icon: "layout-dashboard", label: "Dashboard" }, { id: 2, icon: "users", label: "Users" },
+            { id: 3, icon: "scan-search", label: "KYC Review" }, { id: 4, icon: "clipboard-list", label: "Orders" },
+            { id: 5, icon: "trending-up", label: "Reports" }, { id: 6, icon: "bell", label: "Notifications" },
+            { id: 7, icon: "file-text", label: "Content" }, { id: 8, icon: "lock", label: "RBAC" },
+            { id: 9, icon: "scroll-text", label: "Audit Logs" }
+        ];
+
+        // --- UTILS ---
+        function formatMoney(num) { return `฿${num.toLocaleString()}`; }
+        
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'bg-teal-600 text-white px-4 py-3 rounded shadow-lg text-sm font-medium flex items-center gap-2 slide-up';
+            toast.innerHTML = `<span>✓</span> ${msg}`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(()=>toast.remove(), 300); }, 3000);
+        }
+
+        // --- CORE NAVIGATION ---
+        function login() {
+            document.getElementById('view-0').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('view-0').classList.add('hidden');
+                document.getElementById('app').classList.remove('hidden');
+                showView(1);
+            }, 300);
+        }
+
+        function showView(n) {
+            document.getElementById('header-title').innerText = n === 1 ? "Dashboard" : navItems.find(i=>i.id===n).label;
+
+            document.querySelectorAll('.view-panel').forEach(el => el.classList.add('hidden'));
+            const activeView = document.getElementById(`view-${n}`);
+            activeView.classList.remove('hidden');
+            activeView.classList.remove('fade-in');
+            void activeView.offsetWidth; // trigger reflow
+            activeView.classList.add('fade-in');
+
+            if(n===1) renderDashboard();
+            if(n===2) renderUsers();
+            if(n===3) filterKyc('Pending'); 
+            if(n===4) renderOrders();
+            if(n===5) renderReportsTable();
+            if(n===6) renderNotifTemplatesAndHistory();
+            if(n===7) renderFaqs();
+            if(n===8) renderRBAC();
+            if(n===9) renderAudit();
+
+            document.getElementById('nav-menu').innerHTML = navItems.map(item => {
+                const isActive = item.id === n;
+                const activeClass = isActive ? "bg-teal-500/10 text-teal-400 border-l-[3px] border-teal-500 font-medium" : "text-gray-400 hover:bg-gray-800 hover:text-white border-l-[3px] border-transparent";
+                return `<button onclick="showView(${item.id})" class="w-full text-left px-4 py-2.5 rounded-r flex items-center gap-3 transition-colors text-sm ${activeClass}">
+                            <i data-lucide="${item.icon}" style="width:18px;height:18px;opacity:0.8;"></i> ${item.label}
+                        </button>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        // --- VIEW RENDERERS ---
+
+        // View 1
+        function renderDashboard() {
+            document.getElementById('dash-kyc-count').innerText = kycData.filter(k=>k.status==='Pending').length;
+            document.getElementById('dash-orders-table').innerHTML = ordersData.slice(0,5).map(o => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-3 font-mono text-xs">${o.id}</td>
+                    <td class="px-6 py-3">${o.user}</td>
+                    <td class="px-6 py-3 font-medium">${o.asset}</td>
+                    <td class="px-6 py-3"><span class="px-2 py-0.5 rounded text-xs ${o.type==='Buy'?'bg-teal-100 text-teal-700':'bg-red-100 text-red-700'}">${o.type}</span></td>
+                    <td class="px-6 py-3 font-mono text-xs">${formatMoney(o.price)}</td>
+                    <td class="px-6 py-3"><span class="text-xs ${o.status==='Filled'?'text-green-600':o.status==='Pending'?'text-amber-600':'text-gray-500'}">${o.status}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        // View 2
+        function renderUsers() {
+            document.getElementById('users-table').innerHTML = usersData.map(u => {
+                const kycBg = u.kyc==='Verified'?'bg-green-100 text-green-700':u.kyc==='Pending'?'bg-amber-100 text-amber-700':u.kyc==='Rejected'?'bg-red-100 text-red-700':'bg-gray-100 text-gray-700';
+                const statusColor = u.status==='Active'?'text-green-500':'text-red-500';
+                return `
+                <tr class="hover:bg-gray-50 border-b border-gray-100">
+                    <td class="px-6 py-3 flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs">${u.name.charAt(0)}</div>
+                        <div class="flex flex-col"><span class="font-medium text-gray-800">${u.name}</span><span class="text-xs text-gray-400">${u.email}</span></div>
+                    </td>
+                    <td class="px-6 py-3 text-gray-600">${u.phone}</td>
+                    <td class="px-6 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${kycBg}">${u.kyc}</span></td>
+                    <td class="px-6 py-3"><span class="font-medium text-xs ${statusColor} bg-opacity-10 px-2 py-1 rounded border border-current">${u.status}</span></td>
+                    <td class="px-6 py-3 text-gray-500">${u.joined}</td>
+                    <td class="px-6 py-3 text-right space-x-2">
+                        <button onclick="openUserDrawer(${u.id})" class="text-teal-600 hover:text-teal-800 text-sm font-medium">View</button>
+                        <button onclick="toggleSuspend(${u.id})" class="${u.status==='Active'?'text-amber-600 hover:text-amber-800':'text-green-600 hover:text-green-800'} text-sm font-medium">${u.status==='Active'?'Suspend':'Activate'}</button>
+                    </td>
+                </tr>`}).join('');
+        }
+        function toggleSuspend(id) {
+            const user = usersData.find(u => u.id === id);
+            user.status = user.status === 'Active' ? 'Suspended' : 'Active';
+            renderUsers();
+            showToast(`User ${user.name} is now ${user.status}`);
+        }
+
+        // View 3
+        let currentKycFilter = 'Pending';
+        let activeKycId = null;
+        function filterKyc(status) {
+            currentKycFilter = status;
+            const tabs = document.getElementById('kyc-tabs').children;
+            tabs[0].className = `flex-1 text-center py-3 cursor-pointer ${status==='Pending'?'tab-active':'tab-inactive'}`;
+            tabs[1].className = `flex-1 text-center py-3 cursor-pointer ${status==='Approved'?'tab-active':'tab-inactive'}`;
+            tabs[2].className = `flex-1 text-center py-3 cursor-pointer ${status==='Rejected'?'tab-active':'tab-inactive'}`;
+            
+            document.getElementById('kyc-tab-count').innerText = kycData.filter(k=>k.status==='Pending').length;
+            renderKYC();
+        }
+        function renderKYC() {
+            const filteredList = kycData.filter(k => k.status === currentKycFilter);
+            if(filteredList.length > 0 && (!activeKycId || !filteredList.find(k=>k.id===activeKycId))) {
+                activeKycId = filteredList[0].id;
+            } else if (filteredList.length === 0) {
+                activeKycId = null;
+            }
+
+            document.getElementById('kyc-list').innerHTML = filteredList.map(k => `
+                <div onclick="selectKyc(${k.id})" class="p-4 border-b border-gray-100 cursor-pointer transition-colors ${activeKycId===k.id?'bg-teal-50 border-l-4 border-l-teal-500':'hover:bg-gray-50 border-l-4 border-l-transparent'}">
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="font-medium text-sm text-gray-800">${k.name}</span>
+                        ${k.prio==='High'?'<span class="bg-red-100 text-red-600 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold">High</span>':''}
+                    </div>
+                    <div class="text-xs text-gray-500 flex justify-between"><span>${k.doc}</span><span>${k.date}</span></div>
+                </div>
+            `).join('');
+
+            const detailEl = document.getElementById('kyc-detail');
+            if(!activeKycId) {
+                detailEl.innerHTML = `<div class="flex-1 flex items-center justify-center text-gray-400">No items found for ${currentKycFilter} status</div>`;
+                return;
+            }
+
+            const active = kycData.find(k => k.id === activeKycId);
+            const isPending = active.status === 'Pending';
+            let statusBadge = isPending ? 'bg-amber-100 text-amber-700' : active.status==='Approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+
+            detailEl.innerHTML = `
+                <div class="border-b border-gray-100 pb-4 mb-4 flex justify-between items-center">
+                    <div><h3 class="font-bold text-lg text-gray-800">${active.name}</h3><p class="text-sm text-gray-500">${active.email} • Submitted: ${active.date}</p></div>
+                    <span class="${statusBadge} px-3 py-1 rounded text-[10px] uppercase font-bold tracking-wider">${active.status}</span>
+                </div>
+                <div class="flex-1 overflow-y-auto space-y-6 pr-2">
+                    <div class="flex gap-4">
+                        <div class="flex-1 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg h-[200px] flex items-center justify-center text-gray-400 font-medium relative group overflow-hidden">
+                            <span>ID Front Mockup</span><div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white cursor-zoom-in"><i data-lucide="zoom-in" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> View Full</div>
+                        </div>
+                        <div class="flex-1 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg h-[200px] flex items-center justify-center text-gray-400 font-medium relative group overflow-hidden">
+                            <span>ID Back Mockup</span><div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white cursor-zoom-in"><i data-lucide="zoom-in" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> View Full</div>
+                        </div>
+                    </div>
+                    <div class="flex justify-center">
+                        <div class="w-[150px] h-[180px] bg-gray-100 border-2 border-dashed border-gray-300 rounded-[50%] flex items-center justify-center text-gray-400 font-medium">Selfie Mockup</div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <h4 class="text-sm font-semibold mb-3 text-gray-700">Extracted OCR Data</h4>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div><span class="text-gray-500 block text-xs mb-1">Full Name</span><input type="text" value="${active.name}" class="border border-gray-300 px-3 py-1.5 rounded-md w-full bg-white focus:outline-none focus:border-teal-500" ${!isPending?'readonly':''}></div>
+                            <div><span class="text-gray-500 block text-xs mb-1">ID Number</span><input type="text" value="1-2345-XXXXX-XX-X" class="border border-gray-300 px-3 py-1.5 rounded-md w-full bg-gray-50 font-mono text-xs" readonly></div>
+                            <div><span class="text-gray-500 block text-xs mb-1">Date of Birth</span><input type="date" value="1990-05-15" class="border border-gray-300 px-3 py-1.5 rounded-md w-full bg-white focus:outline-none focus:border-teal-500" ${!isPending?'readonly':''}></div>
+                        </div>
+                    </div>
+                </div>
+                ${isPending ? `
+                <div class="pt-4 mt-4 border-t border-gray-100 flex gap-3 justify-end bg-white" id="kyc-actions">
+                    <button onclick="showRejectReason()" class="border border-red-500 text-red-600 hover:bg-red-50 px-6 py-2 rounded-md font-medium text-sm transition">Reject</button>
+                    <button onclick="updateKycStatus(${active.id}, 'Approved')" class="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2 rounded-md font-medium text-sm shadow-sm transition">Approve KYC</button>
+                </div>` : ''}
+            `;
+            lucide.createIcons();
+        }
+        function selectKyc(id) { activeKycId = id; renderKYC(); }
+        function showRejectReason() {
+            document.getElementById('kyc-actions').innerHTML = `
+                <select id="reject-reason" class="border border-gray-300 rounded-md px-3 py-2 text-sm outline-none"><option>Blurry Document</option><option>Info Mismatch</option><option>Expired Document</option></select>
+                <button onclick="updateKycStatus(${activeKycId}, 'Rejected')" class="bg-red-500 text-white px-6 py-2 rounded-md font-medium text-sm shadow-sm hover:bg-red-600">Confirm Reject</button>
+                <button onclick="renderKYC()" class="text-gray-500 px-3 text-sm hover:text-gray-800">Cancel</button>
+            `;
+        }
+        function updateKycStatus(id, newStatus) {
+            const item = kycData.find(k => k.id === id);
+            item.status = newStatus;
+            activeKycId = null;
+            renderKYC();
+            document.getElementById('dash-kyc-count').innerText = kycData.filter(k=>k.status==='Pending').length;
+            showToast(`KYC ${newStatus}`);
+        }
+
+        // View 4
+        function renderOrders() {
+            document.getElementById('orders-table').innerHTML = ordersData.map(o => `
+                <tr class="hover:bg-gray-50 border-b border-gray-100">
+                    <td class="px-6 py-3 font-mono text-xs text-gray-600">${o.id}</td>
+                    <td class="px-6 py-3 font-medium">${o.user}</td>
+                    <td class="px-6 py-3">${o.asset}</td>
+                    <td class="px-6 py-3"><span class="px-2 py-0.5 rounded text-xs ${o.type==='Buy'?'bg-teal-100 text-teal-700':'bg-red-100 text-red-700'}">${o.type}</span></td>
+                    <td class="px-6 py-3">${o.qty}</td>
+                    <td class="px-6 py-3 font-mono text-xs">฿${o.price.toLocaleString()}</td>
+                    <td class="px-6 py-3"><span class="px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wider ${o.status==='Filled'?'bg-green-100 text-green-700':o.status==='Pending'?'bg-amber-100 text-amber-700':o.status==='Failed'?'bg-red-100 text-red-700':'bg-gray-200 text-gray-600'}">${o.status}</span></td>
+                    <td class="px-6 py-3 text-gray-500 text-xs">${o.time}</td>
+                    <td class="px-6 py-3 text-right"><button onclick="openOrderDrawer('${o.id}')" class="text-teal-600 hover:text-teal-800 text-sm font-medium">Detail</button></td>
+                </tr>
+            `).join('');
+        }
+
+        // View 5 Table
+        function renderReportsTable() {
+            document.getElementById('reports-table').innerHTML = reportsData.map(r => `
+                <tr class="hover:bg-gray-50 border-b border-gray-100">
+                    <td class="px-6 py-3 font-medium">${r.asset}</td>
+                    <td class="px-6 py-3 font-mono text-xs text-teal-600">${r.buyVol}</td>
+                    <td class="px-6 py-3 font-mono text-xs text-red-500">${r.sellVol}</td>
+                    <td class="px-6 py-3 font-mono text-sm font-semibold">${r.net}</td>
+                    <td class="px-6 py-3">${r.trades}</td>
+                    <td class="px-6 py-3 font-mono text-xs">${r.avg}</td>
+                </tr>
+            `).join('');
+        }
+
+        // View 6 Logic
+        function switchNotifTab(tab) {
+            const tabs = document.getElementById('notif-tabs').children;
+            tabs[0].className = `pb-3 cursor-pointer ${tab==='compose'?'tab-active':'tab-inactive'}`;
+            tabs[1].className = `pb-3 cursor-pointer ${tab==='templates'?'tab-active':'tab-inactive'}`;
+            tabs[2].className = `pb-3 cursor-pointer ${tab==='history'?'tab-active':'tab-inactive'}`;
+
+            document.getElementById('notif-compose').classList.toggle('hidden', tab !== 'compose');
+            document.getElementById('notif-templates').classList.toggle('hidden', tab !== 'templates');
+            document.getElementById('notif-history').classList.toggle('hidden', tab !== 'history');
+        }
+        function renderNotifTemplatesAndHistory() {
+            document.getElementById('notif-templates-container').innerHTML = notifTemplates.map(t => `
+                <div class="border border-gray-200 rounded-xl p-5 hover:shadow-md transition bg-white flex flex-col">
+                    <h4 class="font-bold text-gray-800 mb-2">${t.title}</h4>
+                    <p class="text-sm text-gray-500 mb-4 flex-1">${t.body}</p>
+                    <button onclick="useNotifTemplate('${t.title}', '${t.body}')" class="w-full border border-teal-500 text-teal-600 hover:bg-teal-50 py-2 rounded-md text-sm font-medium transition">Use Template</button>
+                </div>
+            `).join('');
+
+            document.getElementById('notif-history-table').innerHTML = notifHistory.map(h => `
+                <tr class="hover:bg-gray-50 border-b border-gray-100">
+                    <td class="px-6 py-3 text-gray-500 text-xs">${h.date}</td>
+                    <td class="px-6 py-3 font-medium text-gray-800">${h.title}</td>
+                    <td class="px-6 py-3 font-mono text-xs">${h.aud}</td>
+                    <td class="px-6 py-3 font-mono text-xs text-green-600">${h.del}</td>
+                    <td class="px-6 py-3 font-mono text-xs">${h.open}</td>
+                    <td class="px-6 py-3"><span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] font-bold uppercase">${h.status}</span></td>
+                </tr>
+            `).join('');
+        }
+        function useNotifTemplate(title, body) {
+            document.getElementById('notif-title-input').value = title;
+            document.getElementById('notif-body-input').value = body;
+            updateNotifPreview();
+            switchNotifTab('compose');
+        }
+        function updateNotifPreview() {
+            document.getElementById('notif-title-preview').innerText = document.getElementById('notif-title-input').value || 'Title';
+            document.getElementById('notif-body-preview').innerText = document.getElementById('notif-body-input').value || 'Message body...';
+        }
+        function sendNotification() {
+            showToast("Notification Sent to 12,450 users!");
+            notifHistory.unshift({
+                date: "2026-04-10 17:15", title: document.getElementById('notif-title-input').value,
+                aud: "12,450", del: "12,450", open: "0%", status: "Sent"
+            });
+            renderNotifTemplatesAndHistory();
+            document.getElementById('notif-title-input').value = "";
+            document.getElementById('notif-body-input').value = "";
+            updateNotifPreview();
+        }
+
+        // View 7 Logic
+        function switchContentTab(tab) {
+            const btns = document.getElementById('content-sidebar').children;
+            btns[0].className = `text-left px-4 py-2 rounded-lg text-sm transition ${tab==='faq'?'bg-white shadow-sm border border-gray-200 font-medium text-teal-600':'text-gray-600 hover:bg-gray-100 border border-transparent'}`;
+            btns[1].className = `text-left px-4 py-2 rounded-lg text-sm transition ${tab==='tos'?'bg-white shadow-sm border border-gray-200 font-medium text-teal-600':'text-gray-600 hover:bg-gray-100 border border-transparent'}`;
+            btns[2].className = `text-left px-4 py-2 rounded-lg text-sm transition ${tab==='privacy'?'bg-white shadow-sm border border-gray-200 font-medium text-teal-600':'text-gray-600 hover:bg-gray-100 border border-transparent'}`;
+
+            document.getElementById('content-faq').classList.toggle('hidden', tab !== 'faq');
+            document.getElementById('content-tos').classList.toggle('hidden', tab !== 'tos');
+            document.getElementById('content-privacy').classList.toggle('hidden', tab !== 'privacy');
+        }
+        function renderFaqs() {
+            document.getElementById('faq-list').innerHTML = faqsData.map((f, i) => `
+                <div class="flex items-center gap-4 p-3 bg-gray-50 border border-gray-100 rounded-lg group hover:border-gray-300 transition">
+                    <span class="text-gray-400 cursor-move hover:text-gray-600">≡</span>
+                    <input type="text" value="${f}" onchange="updateFaq(${i}, this.value)" class="flex-1 bg-transparent border-none outline-none text-sm text-gray-800 font-medium focus:ring-1 focus:ring-teal-500 focus:bg-white rounded px-2 py-1 transition-all">
+                    <button class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" onclick="deleteFaq(${i})"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+        function addFaq() {
+            faqsData.push("New Question?");
+            renderFaqs();
+        }
+        function updateFaq(index, val) { faqsData[index] = val; }
+        function deleteFaq(index) {
+            faqsData.splice(index, 1);
+            renderFaqs();
+            showToast("FAQ Deleted");
+        }
+
+        // View 8 Logic
+        function renderRBAC() {
+            document.getElementById('rbac-table').innerHTML = rbacUsers.map(r => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-3 font-medium text-gray-800">${r.name}</td>
+                    <td class="px-6 py-3 text-gray-500">${r.email}</td>
+                    <td class="px-6 py-3">
+                        ${r.immutable ? 
+                            `<span class="bg-teal-100 text-teal-700 px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wider">${r.role}</span>` :
+                            `<select class="border border-gray-300 rounded p-1 text-xs outline-none focus:border-teal-500 bg-white" onchange="updateRole(${r.id}, this.value)">
+                                <option ${r.role==='Operations'?'selected':''}>Operations</option>
+                                <option ${r.role==='Compliance'?'selected':''}>Compliance</option>
+                                <option ${r.role==='Support'?'selected':''}>Support</option>
+                            </select>`
+                        }
+                    </td>
+                    <td class="px-6 py-3 text-xs text-gray-400">${r.lastActive}</td>
+                    <td class="px-6 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${r.status==='Active'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${r.status}</span></td>
+                    <td class="px-6 py-3">
+                        ${r.immutable ? `<span class="text-xs text-gray-400 italic">Protected</span>` : 
+                        `<button onclick="toggleAdminStatus(${r.id})" class="text-xs font-medium ${r.status==='Active'?'text-amber-600 hover:text-amber-800':'text-green-600 hover:text-green-800'}">${r.status==='Active'?'Deactivate':'Activate'}</button>`}
+                    </td>
+                </tr>
+            `).join('');
+        }
+        function updateRole(id, newRole) {
+            rbacUsers.find(r=>r.id===id).role = newRole;
+            showToast("Role Updated Successfully");
+        }
+        function toggleAdminStatus(id) {
+            const admin = rbacUsers.find(r=>r.id===id);
+            admin.status = admin.status === 'Active' ? 'Suspended' : 'Active';
+            renderRBAC();
+            showToast(`Admin ${admin.status}`);
+        }
+
+        // View 9 Logic
+        function renderAudit() {
+            document.getElementById('audit-table').innerHTML = auditLogsData.map(a => {
+                let badge = 'bg-gray-100 text-gray-700';
+                if(a.act==='APPROVE') badge='bg-teal-100 text-teal-700';
+                if(a.act==='UPDATE') badge='bg-amber-100 text-amber-700';
+                if(a.act==='REJECT' || a.act==='DELETE') badge='bg-red-100 text-red-700';
+                if(a.act==='CREATE') badge='bg-blue-100 text-blue-700';
+                return `
+                <tr class="hover:bg-gray-50 border-b border-gray-100">
+                    <td class="px-6 py-3 text-gray-500">${a.time}</td>
+                    <td class="px-6 py-3 text-gray-800">${a.admin}</td>
+                    <td class="px-6 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${badge}">${a.act}</span></td>
+                    <td class="px-6 py-3 text-gray-600">${a.mod}</td>
+                    <td class="px-6 py-3 font-sans text-sm">${a.target}</td>
+                    <td class="px-6 py-3 text-gray-400">${a.ip}</td>
+                </tr>
+            `}).join('');
+        }
+
+        // --- DRAWER LOGIC ---
+        function openUserDrawer(id) {
+            const user = usersData.find(u => u.id === id);
+            document.getElementById('drawer-title').innerText = "User Details";
+            document.getElementById('drawer-content').innerHTML = `
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-16 h-16 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-2xl">${user.name.charAt(0)}</div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800">${user.name}</h3>
+                        <p class="text-sm text-gray-500">${user.email}</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-8">
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                        <span class="text-xs text-gray-500 block mb-1">Wallet Balance</span>
+                        <span class="font-mono text-lg font-semibold text-gray-800">${formatMoney(user.bal)}</span>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                        <span class="text-xs text-gray-500 block mb-1">Total Trades</span>
+                        <span class="font-mono text-lg font-semibold text-gray-800">${user.trades}</span>
+                    </div>
+                </div>
+                <div class="space-y-4 mb-8">
+                    <h4 class="font-semibold text-gray-800 text-sm border-b pb-2">Account Info</h4>
+                    <div class="flex justify-between text-sm"><span class="text-gray-500">Phone</span><span class="font-medium">${user.phone}</span></div>
+                    <div class="flex justify-between text-sm"><span class="text-gray-500">Joined</span><span class="font-medium">${user.joined}</span></div>
+                    <div class="flex justify-between text-sm"><span class="text-gray-500">KYC Status</span><span class="font-medium ${user.kyc==='Verified'?'text-green-600':'text-amber-600'}">${user.kyc}</span></div>
+                    <div class="flex justify-between text-sm"><span class="text-gray-500">Status</span><span class="font-medium ${user.status==='Active'?'text-green-600':'text-red-600'}">${user.status}</span></div>
+                </div>
+                <div class="space-y-3">
+                    <button onclick="toggleSuspend(${user.id}); closeDrawer();" class="w-full border border-gray-300 py-2 rounded-md text-sm font-medium hover:bg-gray-50 transition">${user.status==='Active'?'Suspend Account':'Activate Account'}</button>
+                    <button onclick="showToast('PIN Reset email sent')" class="w-full border border-gray-300 py-2 rounded-md text-sm font-medium hover:bg-gray-50 transition">Reset PIN</button>
+                    <button class="w-full bg-teal-500 text-white py-2 rounded-md text-sm font-medium hover:bg-teal-600 shadow-sm transition">View Full Trade History</button>
+                </div>
+            `;
+            showDrawer();
+        }
+
+        function openOrderDrawer(id) {
+            const o = ordersData.find(x => x.id === id);
+            document.getElementById('drawer-title').innerText = "Order " + id;
+            document.getElementById('drawer-content').innerHTML = `
+                <div class="space-y-4 mb-8 text-sm">
+                    <div class="flex justify-between border-b pb-3"><span class="text-gray-500">User</span><span class="font-medium">${o.user}</span></div>
+                    <div class="flex justify-between border-b pb-3"><span class="text-gray-500">Asset</span><span class="font-medium">${o.asset}</span></div>
+                    <div class="flex justify-between border-b pb-3"><span class="text-gray-500">Type</span><span class="font-medium ${o.type==='Buy'?'text-teal-600':'text-red-600'}">${o.type}</span></div>
+                    <div class="flex justify-between border-b pb-3"><span class="text-gray-500">Quantity</span><span class="font-medium">${o.qty}</span></div>
+                    <div class="flex justify-between border-b pb-3"><span class="text-gray-500">Total Price</span><span class="font-mono font-medium">${formatMoney(o.price)}</span></div>
+                    <div class="flex justify-between border-b pb-3"><span class="text-gray-500">Time</span><span class="font-medium">${o.time}</span></div>
+                    <div class="flex justify-between border-b pb-3"><span class="text-gray-500">Status</span><span class="font-bold ${o.status==='Filled'?'text-green-600':o.status==='Pending'?'text-amber-600':'text-gray-500'}">${o.status}</span></div>
+                </div>
+                ${o.status === 'Pending' ? `<button onclick="cancelOrder('${o.id}'); closeDrawer();" class="w-full bg-red-500 text-white py-2 rounded-md text-sm font-medium hover:bg-red-600 shadow-sm transition">Cancel Order</button>` : ''}
+            `;
+            showDrawer();
+        }
+
+        function cancelOrder(id) {
+            const o = ordersData.find(x => x.id === id);
+            if(o) o.status = 'Cancelled';
+            renderOrders();
+            showToast('Order Cancelled Successfully');
+        }
+
+        function showDrawer() {
+            document.getElementById('drawer-backdrop').classList.remove('hidden');
+            document.getElementById('drawer-panel').classList.remove('drawer-closed');
+            document.getElementById('drawer-panel').classList.add('drawer-open');
+        }
+
+        function closeDrawer() {
+            document.getElementById('drawer-panel').classList.remove('drawer-open');
+            document.getElementById('drawer-panel').classList.add('drawer-closed');
+            setTimeout(() => { document.getElementById('drawer-backdrop').classList.add('hidden'); }, 300);
+        }
+
+        // --- INIT LIVE FEED ---
+        const mockAssets = ["Gold", "Silver", "Crude Oil", "Palm Oil", "Platinum"];
+        setInterval(() => {
+            if(document.getElementById('view-1').classList.contains('hidden')) return;
+            const container = document.getElementById('live-feed-container');
+            const row = document.createElement('div');
+            const isBuy = Math.random() > 0.5;
+            const asset = mockAssets[Math.floor(Math.random()*mockAssets.length)];
+            row.className = 'flex justify-between items-center text-xs py-2.5 border-b border-gray-100 fade-in';
+            row.innerHTML = `<span class="text-gray-500">New <span class="${isBuy?'text-teal-600':'text-red-600'} font-medium">${isBuy?'Buy':'Sell'}</span> order</span><span class="font-bold text-gray-800">${asset}</span>`;
+            container.prepend(row);
+            if(container.children.length > 3) container.removeChild(container.lastChild);
+        }, 2500);
+
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>

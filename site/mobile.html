@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradePlatform — Mobile Demo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #F1F5F9; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 0; }
+  .thai-font { font-family: 'Sarabun', sans-serif; }
+  .mono { font-family: monospace; }
+  .phone-frame { width: 340px; height: 736px; background: #000; border-radius: 36px; position: relative; overflow: hidden; box-shadow: 0 0 0 3px #1a1a1a; }
+  .phone-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 160px; height: 34px; background: #000; border-radius: 0 0 20px 20px; z-index: 100; }
+  .phone-screen { width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden; position: relative; scrollbar-width: none; }
+  .phone-screen::-webkit-scrollbar { display: none; }
+  .screen { display: none; width: 100%; min-height: 100%; position: relative; }
+  .screen.active { display: flex; flex-direction: column; }
+  .btn-teal { background: #1D9E75; color: #fff; border: none; border-radius: 12px; padding: 16px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; text-align: center; transition: transform 0.1s; }
+  .btn-teal:active { transform: scale(0.97); }
+  .btn-ghost { background: none; border: none; color: #1D9E75; font-size: 14px; cursor: pointer; padding: 8px; }
+  .tab-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 72px; background: #0D0D0F; border-top: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; justify-content: space-around; padding-bottom: 8px; z-index: 50; }
+  .tab-item { display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; color: #666; font-size: 10px; padding: 4px 8px; }
+  .tab-item.active { color: #1D9E75; }
+  .tab-item svg { width: 24px; height: 24px; }
+  .back-btn { position: absolute; top: 44px; left: 16px; z-index: 90; color: #1D9E75; font-size: 14px; cursor: pointer; background: none; border: none; }
+  .input-field { width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid #E2E8F0; font-size: 15px; outline: none; background: #fff; }
+  .input-field:focus { border-color: #1D9E75; }
+  .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #1D9E75; color: #fff; padding: 12px 24px; border-radius: 12px; font-size: 14px; z-index: 999; display: none; }
+  .toast.show { display: block; animation: fadeInOut 2s ease; }
+  @keyframes fadeInOut { 0% { opacity: 0; transform: translateX(-50%) translateY(10px); } 15% { opacity: 1; transform: translateX(-50%) translateY(0); } 85% { opacity: 1; } 100% { opacity: 0; } }
+  .watermark { text-align: center; font-size: 10px; color: #444; padding: 4px; position: absolute; bottom: 74px; left: 0; right: 0; z-index: 40; pointer-events: none; }
+  .dot-nav { display: flex; flex-direction: column; gap: 5px; position: fixed; left: calc(50% - 190px); top: 50%; transform: translateY(-50%); z-index: 200; }
+  .dot-nav span { width: 7px; height: 7px; border-radius: 50%; background: #475569; transition: all 0.2s; cursor: pointer; opacity: 0.6; }
+  .dot-nav span:hover { opacity: 1; transform: scale(1.4); background: #94A3B8; }
+  .dot-nav span.active { background: #1D9E75; opacity: 1; transform: scale(1.3); }
+  .lang-toggle { display: flex; gap: 0; margin-top: 16px; border-radius: 20px; overflow: hidden; border: 2px solid #1D9E75; }
+  .lang-btn { padding: 8px 20px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; background: transparent; color: #1D9E75; transition: all 0.2s; }
+  .lang-btn.active { background: #1D9E75; color: #fff; }
+  .hide-scrollbar { scrollbar-width: none; }
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .tf-tab { padding:8px 16px;border-radius:8px;border:none;background:transparent;color:#64748B;font-size:13px;font-weight:600;cursor:pointer; }
+  .tf-tab.active { background:#161618;color:#1D9E75; }
+  .order-type-btn { flex:1;padding:10px;border:none;border-radius:8px;background:transparent;color:#64748B;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s; }
+  .order-type-btn.active { background:#1D9E75;color:#fff; }
+  .market-row { display:flex;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer; }
+  .market-row:active { background:rgba(255,255,255,0.03); }
+  .wallet-tab { padding:8px 14px;border-radius:8px;border:none;background:transparent;color:#64748B;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap; }
+  .wallet-tab.active { background:#161618;color:#1D9E75; }
+  .chip-btn { padding:8px 14px;border-radius:20px;border:1px solid #334155;background:transparent;color:#CBD5E1;font-size:13px;cursor:pointer;white-space:nowrap;transition:all 0.15s; }
+  .chip-btn:active { background:#1D9E75;color:#fff;border-color:#1D9E75; }
+</style>
+</head>
+<body>
+
+<!-- Phone Frame -->
+<div class="phone-frame">
+  <div class="phone-notch"></div>
+  <div class="phone-screen" id="phoneScreen">
+
+    <!-- SCREEN 1 — Splash -->
+    <div class="screen active" id="screen1" style="background:#0D0D0F; align-items:center; justify-content:center;">
+      <div style="width:80px;height:80px;border-radius:50%;background:#1D9E75;display:flex;align-items:center;justify-content:center;">
+        <span style="color:#fff;font-size:36px;font-weight:700;">T</span>
+      </div>
+      <span style="color:#fff;font-size:22px;font-weight:600;margin-top:16px;" data-lang="appName">TradePlatform</span>
+    </div>
+
+    <!-- SCREEN 2 — Welcome -->
+    <div class="screen" id="screen2" style="background:#0D0D0F; padding:60px 24px 40px;">
+      <!-- Abstract teal line art -->
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;">
+        <svg width="200" height="160" viewBox="0 0 200 160">
+          <path d="M20 140 Q50 20 100 80 T180 40" stroke="#1D9E75" stroke-width="2" fill="none" opacity="0.6"/>
+          <path d="M10 120 Q60 40 110 100 T190 60" stroke="#1D9E75" stroke-width="1.5" fill="none" opacity="0.4"/>
+          <path d="M30 130 Q70 50 120 90 T170 30" stroke="#1D9E75" stroke-width="1" fill="none" opacity="0.3"/>
+          <circle cx="100" cy="80" r="24" stroke="#1D9E75" stroke-width="2" fill="none" opacity="0.5"/>
+          <circle cx="100" cy="80" r="8" fill="#1D9E75" opacity="0.3"/>
+        </svg>
+      </div>
+      <div style="text-align:center;margin-bottom:40px;">
+        <h1 style="color:#fff;font-size:26px;font-weight:700;margin-bottom:8px;" data-lang="welcomeTitle">Trade Thai Commodities</h1>
+        <p style="color:#94A3B8;font-size:14px;" data-lang="welcomeSubtitle">Real-time prices, AI insights, and seamless trading</p>
+      </div>
+      <button class="btn-teal" style="margin-bottom:12px;" onclick="showScreen(3, 'register')" data-lang="createAccount">Create Account</button>
+      <button class="btn-ghost" style="display:block;text-align:center;width:100%;" onclick="showScreen(3, 'login')" data-lang="login">Log In</button>
+    </div>
+
+    <!-- SCREEN 3 — Register / Login -->
+    <div class="screen" id="screen3" style="background:#FAFAFA; padding:60px 24px 40px;">
+      <button class="back-btn" onclick="showScreen(2)" style="color:#1D9E75;">← <span data-lang="back">Back</span></button>
+      <h2 id="screen3Title" style="font-size:24px;font-weight:700;margin-bottom:24px;margin-top:20px;" data-lang="register">Register</h2>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div id="nameField">
+          <label style="font-size:12px;color:#64748B;margin-bottom:4px;display:block;" data-lang="fullName">Full Name</label>
+          <input class="input-field" type="text" placeholder="Somchai Thongdee">
+        </div>
+        <div>
+          <label style="font-size:12px;color:#64748B;margin-bottom:4px;display:block;" data-lang="email">Email</label>
+          <input class="input-field" type="email" placeholder="somchai@email.com">
+        </div>
+        <div id="phoneField">
+          <label style="font-size:12px;color:#64748B;margin-bottom:4px;display:block;" data-lang="phone">Phone</label>
+          <div style="display:flex;gap:8px;">
+            <input class="input-field" type="text" value="+66" style="width:70px;text-align:center;" readonly>
+            <input class="input-field" type="tel" placeholder="81 234 5678" style="flex:1;">
+          </div>
+        </div>
+        <div>
+          <label style="font-size:12px;color:#64748B;margin-bottom:4px;display:block;" data-lang="password">Password</label>
+          <input class="input-field" type="password" placeholder="••••••••">
+        </div>
+      </div>
+      <button class="btn-teal" style="margin-top:24px;" onclick="showScreen(4)" data-lang="continue">Continue</button>
+    </div>
+
+    <!-- SCREEN 4 — OTP Verification -->
+    <div class="screen" id="screen4" style="background:#FAFAFA; padding:60px 24px 40px;">
+      <button class="back-btn" onclick="showScreen(3)" style="color:#1D9E75;">← <span data-lang="back">Back</span></button>
+      <h2 style="font-size:24px;font-weight:700;margin-bottom:8px;margin-top:20px;" data-lang="otpTitle">Verify Your Number</h2>
+      <p style="font-size:14px;color:#64748B;margin-bottom:32px;" data-lang="otpSubtitle">Enter 6-digit code sent to +66 XX XXX XXXX</p>
+      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:32px;" id="otpBoxes">
+        <input class="otp-box" type="text" maxlength="1" value="1" style="width:48px;height:56px;text-align:center;font-size:22px;font-weight:700;border-radius:12px;border:2px solid #1D9E75;outline:none;background:#fff;">
+        <input class="otp-box" type="text" maxlength="1" value="2" style="width:48px;height:56px;text-align:center;font-size:22px;font-weight:700;border-radius:12px;border:2px solid #1D9E75;outline:none;background:#fff;">
+        <input class="otp-box" type="text" maxlength="1" value="3" style="width:48px;height:56px;text-align:center;font-size:22px;font-weight:700;border-radius:12px;border:2px solid #1D9E75;outline:none;background:#fff;">
+        <input class="otp-box" type="text" maxlength="1" value="4" style="width:48px;height:56px;text-align:center;font-size:22px;font-weight:700;border-radius:12px;border:2px solid #1D9E75;outline:none;background:#fff;">
+        <input class="otp-box" type="text" maxlength="1" value="5" style="width:48px;height:56px;text-align:center;font-size:22px;font-weight:700;border-radius:12px;border:2px solid #1D9E75;outline:none;background:#fff;">
+        <input class="otp-box" type="text" maxlength="1" value="6" style="width:48px;height:56px;text-align:center;font-size:22px;font-weight:700;border-radius:12px;border:2px solid #1D9E75;outline:none;background:#fff;">
+      </div>
+      <button class="btn-teal" onclick="showScreen(5)" data-lang="verify">Verify</button>
+      <button class="btn-ghost" style="display:block;text-align:center;width:100%;margin-top:12px;" onclick="showToast(lang==='en'?'Code sent!':'ส่งรหัสแล้ว!')" data-lang="resendCode">Resend code</button>
+    </div>
+
+    <!-- SCREEN 5 — PIN Setup -->
+    <div class="screen" id="screen5" style="background:#FAFAFA; padding:60px 24px 20px;">
+      <button class="back-btn" onclick="showScreen(4)" style="color:#1D9E75;">← <span data-lang="back">Back</span></button>
+      <h2 style="font-size:24px;font-weight:700;margin-bottom:8px;margin-top:20px;text-align:center;" data-lang="pinTitle">Create Your PIN</h2>
+      <p style="font-size:14px;color:#64748B;margin-bottom:24px;text-align:center;" data-lang="pinSubtitle">Enter a 6-digit PIN for secure access</p>
+      <!-- PIN Dots -->
+      <div style="display:flex;gap:16px;justify-content:center;margin-bottom:32px;" id="pinDots">
+        <div class="pin-dot" style="width:16px;height:16px;border-radius:50%;border:2px solid #CBD5E1;"></div>
+        <div class="pin-dot" style="width:16px;height:16px;border-radius:50%;border:2px solid #CBD5E1;"></div>
+        <div class="pin-dot" style="width:16px;height:16px;border-radius:50%;border:2px solid #CBD5E1;"></div>
+        <div class="pin-dot" style="width:16px;height:16px;border-radius:50%;border:2px solid #CBD5E1;"></div>
+        <div class="pin-dot" style="width:16px;height:16px;border-radius:50%;border:2px solid #CBD5E1;"></div>
+        <div class="pin-dot" style="width:16px;height:16px;border-radius:50%;border:2px solid #CBD5E1;"></div>
+      </div>
+      <!-- Number Keypad -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:280px;margin:0 auto;">
+        <button class="keypad-btn" onclick="pressPin(1)">1</button>
+        <button class="keypad-btn" onclick="pressPin(2)">2</button>
+        <button class="keypad-btn" onclick="pressPin(3)">3</button>
+        <button class="keypad-btn" onclick="pressPin(4)">4</button>
+        <button class="keypad-btn" onclick="pressPin(5)">5</button>
+        <button class="keypad-btn" onclick="pressPin(6)">6</button>
+        <button class="keypad-btn" onclick="pressPin(7)">7</button>
+        <button class="keypad-btn" onclick="pressPin(8)">8</button>
+        <button class="keypad-btn" onclick="pressPin(9)">9</button>
+        <div></div>
+        <button class="keypad-btn" onclick="pressPin(0)">0</button>
+        <button class="keypad-btn" onclick="deletePin()" style="font-size:18px;">⌫</button>
+      </div>
+      <style>
+        .keypad-btn { width:72px;height:72px;border-radius:50%;border:1px solid #E2E8F0;background:#fff;font-size:24px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 auto;transition:background 0.1s; }
+        .keypad-btn:active { background:#E2E8F0; }
+      </style>
+    </div>
+
+    <!-- SCREEN 6 — Biometric Opt-in -->
+    <div class="screen" id="screen6" style="background:#FAFAFA; padding:60px 24px 40px; align-items:center; justify-content:center;">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <!-- Face ID Icon -->
+        <svg width="100" height="100" viewBox="0 0 100 100" style="margin-bottom:32px;">
+          <circle cx="50" cy="50" r="45" stroke="#1D9E75" stroke-width="2" fill="none"/>
+          <circle cx="36" cy="40" r="4" fill="#1D9E75"/>
+          <circle cx="64" cy="40" r="4" fill="#1D9E75"/>
+          <path d="M35 60 Q50 75 65 60" stroke="#1D9E75" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <line x1="50" y1="48" x2="50" y2="55" stroke="#1D9E75" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <h2 style="font-size:24px;font-weight:700;margin-bottom:8px;text-align:center;" data-lang="biometricTitle">Enable Face ID</h2>
+        <p style="font-size:14px;color:#64748B;text-align:center;max-width:280px;" data-lang="biometricSubtitle">Use Face ID for faster and more secure login</p>
+      </div>
+      <div style="width:100%;padding:0 0 40px;">
+        <button class="btn-teal" style="margin-bottom:12px;" onclick="showScreen(7)" data-lang="enable">Enable</button>
+        <button class="btn-ghost" style="display:block;text-align:center;width:100%;" onclick="showScreen(7)" data-lang="notNow">Not now</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 7 — KYC Introduction -->
+    <div class="screen" id="screen7" style="background:#FAFAFA; padding:60px 24px 40px;">
+      <button class="back-btn" onclick="showScreen(6)" style="color:#1D9E75;">← <span data-lang="back">Back</span></button>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <!-- Shield + Checkmark Icon -->
+        <svg width="80" height="80" viewBox="0 0 80 80" style="margin-bottom:24px;">
+          <path d="M40 8 L68 20 V44 C68 60 40 72 40 72 C40 72 12 60 12 44 V20 Z" stroke="#1D9E75" stroke-width="2" fill="none"/>
+          <polyline points="28,40 36,48 52,32" stroke="#1D9E75" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <h2 style="font-size:24px;font-weight:700;margin-bottom:8px;text-align:center;" data-lang="kycTitle">Verify Your Identity</h2>
+        <p style="font-size:14px;color:#64748B;text-align:center;margin-bottom:24px;max-width:300px;" data-lang="kycSubtitle">Thai financial regulations require identity verification before trading</p>
+        <div style="width:100%;background:#fff;border-radius:12px;padding:20px;border:1px solid #E2E8F0;">
+          <p style="font-size:13px;font-weight:600;margin-bottom:12px;color:#334155;" data-lang="kycNeedTitle">What you'll need:</p>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:#475569;">
+              <span style="color:#1D9E75;">✓</span> <span data-lang="kycNeed1">Thai ID or Passport</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:#475569;">
+              <span style="color:#1D9E75;">✓</span> <span data-lang="kycNeed2">Selfie photo</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:#475569;">
+              <span style="color:#1D9E75;">✓</span> <span data-lang="kycNeed3">3 minutes</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="width:100%;padding-bottom:20px;">
+        <button class="btn-teal" style="margin-bottom:12px;" onclick="showScreen(8)" data-lang="startVerification">Start Verification</button>
+        <button class="btn-ghost" style="display:block;text-align:center;width:100%;" onclick="showScreen(14, null, 'kyc-pending')" data-lang="doLater">Do this later</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 8 — Personal Information (KYC Step 1) -->
+    <div class="screen" id="screen8" style="background:#FAFAFA; padding:60px 24px 40px;">
+      <button class="back-btn" onclick="showScreen(7)" style="color:#1D9E75;">← <span data-lang="back">Back</span></button>
+      <!-- Progress Bar -->
+      <div style="display:flex;gap:6px;margin-top:16px;margin-bottom:24px;" class="kyc-progress">
+        <div style="flex:1;height:4px;border-radius:2px;background:#1D9E75;"></div>
+        <div style="flex:1;height:4px;border-radius:2px;background:#E2E8F0;"></div>
+        <div style="flex:1;height:4px;border-radius:2px;background:#E2E8F0;"></div>
+        <div style="flex:1;height:4px;border-radius:2px;background:#E2E8F0;"></div>
+      </div>
+      <p style="font-size:12px;color:#94A3B8;margin-bottom:4px;" data-lang="kycStep1Label">Step 1 of 4</p>
+      <h2 style="font-size:22px;font-weight:700;margin-bottom:20px;" data-lang="kycStep1Title">Personal Information</h2>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <label style="font-size:12px;color:#64748B;margin-bottom:4px;display:block;" data-lang="fullNameThai">Full Name (Thai)</label>
+          <input class="input-field" type="text" value="สมชาย ทองดี">
+        </div>
+        <div>
+          <label style="font-size:12px;color:#64748B;margin-bottom:4px;display:block;" data-lang="dob">Date of Birth</label>
+          <input class="input-field" type="text" value="15/03/1990">
+        </div>
+        <div>
+          <label style="font-size:12px;color:#64748B;margin-bottom:4px;display:block;" data-lang="nationalId">National ID Number</label>
+          <input class="input-field mono" type="text" value="1-2345-67890-12-3">
+        </div>
+        <div>
+          <label style="font-size:12px;color:#64748B;margin-bottom:4px;display:block;" data-lang="idExpiry">ID Expiry Date</label>
+          <input class="input-field" type="text" value="15/03/2030">
+        </div>
+      </div>
+      <button class="btn-teal" style="margin-top:24px;" onclick="showScreen(9)" data-lang="continue">Continue</button>
+    </div>
+
+    <!-- SCREEN 9 — Document Selection (KYC Step 2) -->
+    <div class="screen" id="screen9" style="background:#FAFAFA; padding:60px 24px 40px;">
+      <button class="back-btn" onclick="showScreen(8)" style="color:#1D9E75;">← <span data-lang="back">Back</span></button>
+      <!-- Progress Bar -->
+      <div style="display:flex;gap:6px;margin-top:16px;margin-bottom:24px;" class="kyc-progress">
+        <div style="flex:1;height:4px;border-radius:2px;background:#1D9E75;"></div>
+        <div style="flex:1;height:4px;border-radius:2px;background:#1D9E75;"></div>
+        <div style="flex:1;height:4px;border-radius:2px;background:#E2E8F0;"></div>
+        <div style="flex:1;height:4px;border-radius:2px;background:#E2E8F0;"></div>
+      </div>
+      <p style="font-size:12px;color:#94A3B8;margin-bottom:4px;" data-lang="kycStep2Label">Step 2 of 4</p>
+      <h2 style="font-size:22px;font-weight:700;margin-bottom:20px;" data-lang="kycStep2Title">Select Document Type</h2>
+      <div style="display:flex;flex-direction:column;gap:12px;" id="docOptions">
+        <div class="doc-option selected" onclick="selectDoc(this)" style="border:2px solid #1D9E75;border-radius:12px;padding:16px;background:#fff;cursor:pointer;position:relative;">
+          <span style="font-weight:600;font-size:15px;" data-lang="docNationalId">Thai National ID</span>
+          <span style="position:absolute;top:8px;right:12px;background:#1D9E75;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;" data-lang="recommended">Recommended</span>
+          <p style="font-size:13px;color:#64748B;margin-top:4px;" data-lang="docNationalIdDesc">Government-issued identification card</p>
+        </div>
+        <div class="doc-option" onclick="selectDoc(this)" style="border:2px solid #E2E8F0;border-radius:12px;padding:16px;background:#fff;cursor:pointer;">
+          <span style="font-weight:600;font-size:15px;" data-lang="docPassport">Passport</span>
+          <p style="font-size:13px;color:#64748B;margin-top:4px;" data-lang="docPassportDesc">Valid international passport</p>
+        </div>
+        <div class="doc-option" onclick="selectDoc(this)" style="border:2px solid #E2E8F0;border-radius:12px;padding:16px;background:#fff;cursor:pointer;">
+          <span style="font-weight:600;font-size:15px;" data-lang="docLicence">Driver's Licence</span>
+          <p style="font-size:13px;color:#64748B;margin-top:4px;" data-lang="docLicenceDesc">Thai driver's licence</p>
+        </div>
+      </div>
+      <button class="btn-teal" style="margin-top:24px;" onclick="showScreen(10)" data-lang="continue">Continue</button>
+    </div>
+
+    <!-- SCREEN 10 — Document Capture (KYC Step 2b) -->
+    <div class="screen" id="screen10" style="background:#FAFAFA; padding:60px 24px 40px;">
+      <button class="back-btn" onclick="showScreen(9)" style="color:#1D9E75;">← <span data-lang="back">Back</span></button>
+      <!-- Progress Bar -->
+      <div style="display:flex;gap:6px;margin-top:16px;margin-bottom:24px;" class="kyc-progress">
+        <div style="flex:1;height:4px;border-radius:2px;background:#1D9E75;"></div>
+        <div style="flex:1;height:4px;border-radius:2px;background:#1D9E75;"></div>
+        <div style="flex:1;height:4px;border-radius:2px;background:#E2E8F0;"></div>
+        <div style="flex:1;height:4px;border-radius:2px;background:#E2E8F0;"></div>
+      </div>
+      <p style="font-size:12px;color:#94A3B8;margin-bottom:4px;" data-lang="kycStep2bLabel">Step 2 of 4 — Capture</p>
+      <h2 style="font-size:22px;font-weight:700;margin-bottom:20px;" data-lang="captureDocTitle">Capture Document</h2>
+      <!-- Camera Viewfinder -->
+      <div id="docViewfinder" style="width:100%;aspect-ratio:4/3;background:#1a1a1a;border-radius:12px;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+        <!-- Corner guides -->
+        <div style="position:absolute;top:16px;left:16px;width:32px;height:32px;border-top:3px solid #fff;border-left:3px solid #fff;border-radius:4px 0 0 0;"></div>
+        <div style="position:absolute;top:16px;right:16px;width:32px;height:32px;border-top:3px solid #fff;border-right:3px solid #fff;border-radius:0 4px 0 0;"></div>
+        <div style="position:absolute;bottom:16px;left:16px;width:32px;height:32px;border-bottom:3px solid #fff;border-left:3px solid #fff;border-radius:0 0 0 4px;"></div>
+        <div style="position:absolute;bottom:16px;right:16px;width:32px;height:32px;border-bottom:3px solid #fff;border-right:3px solid #fff;border-radius:0 0 4px 0;"></div>
+        <!-- Success overlay (hidden by default) -->
+        <div id="docSuccess" style="display:none;position:absolute;inset:0;background:rgba(29,158,117,0.85);display:none;align-items:center;justify-content:center;">
+          <svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="none" stroke="#fff" stroke-width="3"/><polyline points="20,32 28,40 44,24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <p style="color:rgba(255,255,255,0.6);font-size:13px;" data-lang="alignDoc">Align document within frame</p>
+      </div>
+      <button class="btn-teal" style="margin-top:20px;border-radius:50px;" onclick="captureDoc()" id="captureDocBtn" data-lang="capture">Capture</button>
+    </div>
+
+    <!-- SCREEN 11 — Selfie Capture (KYC Step 3) -->
+    <div class="screen" id="screen11" style="background:#FAFAFA; padding:60px 24px 40px;">
+      <button class="back-btn" onclick="showScreen(10)" style="color:#1D9E75;">← <span data-lang="back">Back</span></button>
+      <!-- Progress Bar -->
+      <div style="display:flex;gap:6px;margin-top:16px;margin-bottom:24px;" class="kyc-progress">
+        <div style="flex:1;height:4px;border-radius:2px;background:#1D9E75;"></div>
+        <div style="flex:1;height:4px;border-radius:2px;background:#1D9E75;"></div>
+        <div style="flex:1;height:4px;border-radius:2px;background:#1D9E75;"></div>
+        <div style="flex:1;height:4px;border-radius:2px;background:#E2E8F0;"></div>
+      </div>
+      <p style="font-size:12px;color:#94A3B8;margin-bottom:4px;" data-lang="kycStep3Label">Step 3 of 4</p>
+      <h2 style="font-size:22px;font-weight:700;margin-bottom:20px;" data-lang="selfieTitle">Take a Selfie</h2>
+      <!-- Selfie viewfinder -->
+      <div style="width:100%;display:flex;justify-content:center;margin-bottom:16px;">
+        <div id="selfieViewfinder" style="width:220px;height:280px;background:#1a1a1a;border-radius:110px;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+          <!-- Oval outline -->
+          <div style="width:180px;height:240px;border:2px dashed #1D9E75;border-radius:90px;position:absolute;"></div>
+          <!-- Success overlay -->
+          <div id="selfieSuccess" style="display:none;position:absolute;inset:0;background:rgba(29,158,117,0.85);border-radius:110px;align-items:center;justify-content:center;">
+            <svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="none" stroke="#fff" stroke-width="3"/><polyline points="20,32 28,40 44,24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <p style="color:rgba(255,255,255,0.6);font-size:13px;text-align:center;padding:0 20px;" data-lang="positionFace">Position your face</p>
+        </div>
+      </div>
+      <button class="btn-teal" style="border-radius:50px;" onclick="captureSelfie()" id="captureSelfieBtn" data-lang="captureSelfie">Capture Selfie</button>
+    </div>
+
+    <!-- SCREEN 12 — Review & Submit (KYC Step 4) -->
+    <div class="screen" id="screen12" style="background:#FAFAFA; padding:60px 24px 40px;">
+      <button class="back-btn" onclick="showScreen(11)" style="color:#1D9E75;">← <span data-lang="back">Back</span></button>
+      <!-- Progress Bar (all complete) -->
+      <div style="display:flex;gap:6px;margin-top:16px;margin-bottom:24px;" class="kyc-progress">
+        <div style="flex:1;height:4px;border-radius:2px;background:#1D9E75;"></div>
+        <div style="flex:1;height:4px;border-radius:2px;background:#1D9E75;"></div>
+        <div style="flex:1;height:4px;border-radius:2px;background:#1D9E75;"></div>
+        <div style="flex:1;height:4px;border-radius:2px;background:#1D9E75;"></div>
+      </div>
+      <p style="font-size:12px;color:#94A3B8;margin-bottom:4px;" data-lang="kycStep4Label">Step 4 of 4</p>
+      <h2 style="font-size:22px;font-weight:700;margin-bottom:20px;" data-lang="reviewTitle">Review & Submit</h2>
+      <!-- Summary cards -->
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;">
+        <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid #E2E8F0;">
+          <p style="font-size:12px;color:#94A3B8;margin-bottom:6px;" data-lang="personalInfo">Personal Information</p>
+          <p style="font-size:14px;font-weight:600;">สมชาย ทองดี</p>
+          <p style="font-size:13px;color:#64748B;">DOB: 15/03/1990</p>
+          <p style="font-size:13px;color:#64748B;font-family:monospace;">ID: 1-2345-67890-12-3</p>
+        </div>
+        <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid #E2E8F0;">
+          <p style="font-size:12px;color:#94A3B8;margin-bottom:6px;" data-lang="documentType">Document Type</p>
+          <p style="font-size:14px;font-weight:600;" data-lang="docNationalId">Thai National ID</p>
+          <p style="font-size:13px;color:#1D9E75;">✓ <span data-lang="captured">Captured</span></p>
+        </div>
+        <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid #E2E8F0;display:flex;align-items:center;gap:14px;">
+          <div style="width:56px;height:56px;border-radius:50%;background:#E2E8F0;display:flex;align-items:center;justify-content:center;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
+          </div>
+          <div>
+            <p style="font-size:12px;color:#94A3B8;" data-lang="selfie">Selfie</p>
+            <p style="font-size:13px;color:#1D9E75;">✓ <span data-lang="captured">Captured</span></p>
+          </div>
+        </div>
+      </div>
+      <!-- PDPA Checkbox -->
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:#475569;margin-bottom:24px;cursor:pointer;">
+        <input type="checkbox" checked style="margin-top:2px;accent-color:#1D9E75;width:18px;height:18px;">
+        <span data-lang="pdpaConsent">I consent to the collection and processing of my personal data in accordance with PDPA regulations.</span>
+      </label>
+      <button class="btn-teal" onclick="showScreen(13)" data-lang="submitReview">Submit for Review</button>
+    </div>
+
+    <!-- SCREEN 13 — KYC Pending -->
+    <div class="screen" id="screen13" style="background:#FAFAFA; padding:60px 24px 40px; align-items:center; justify-content:center;">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <!-- Animated clock -->
+        <div style="margin-bottom:24px;">
+          <svg width="80" height="80" viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="36" stroke="#F59E0B" stroke-width="2" fill="none"/>
+            <line x1="40" y1="40" x2="40" y2="22" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round">
+              <animateTransform attributeName="transform" type="rotate" from="0 40 40" to="360 40 40" dur="8s" repeatCount="indefinite"/>
+            </line>
+            <line x1="40" y1="40" x2="52" y2="40" stroke="#F59E0B" stroke-width="2" stroke-linecap="round">
+              <animateTransform attributeName="transform" type="rotate" from="0 40 40" to="360 40 40" dur="60s" repeatCount="indefinite"/>
+            </line>
+            <circle cx="40" cy="40" r="3" fill="#F59E0B"/>
+          </svg>
+        </div>
+        <h2 style="font-size:24px;font-weight:700;margin-bottom:8px;text-align:center;" data-lang="kycPendingTitle">Under Review</h2>
+        <p style="font-size:14px;color:#64748B;text-align:center;max-width:280px;" data-lang="kycPendingSubtitle">Your documents are being verified. This usually takes 1–2 business days.</p>
+      </div>
+      <div style="width:100%;padding-bottom:40px;">
+        <button class="btn-ghost" style="display:block;text-align:center;width:100%;font-size:16px;" onclick="showScreen(14, null, 'kyc-pending')" data-lang="browseMarkets">Browse markets →</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 14 — Dashboard (HOME) -->
+    <div class="screen" id="screen14" style="background:#0D0D0F; padding:50px 0 80px;">
+      <!-- KYC Banner -->
+      <div id="kycBanner" style="margin:0 16px 12px;padding:12px 16px;border-radius:10px;background:#1D9E75;display:flex;align-items:center;justify-content:space-between;">
+        <span style="color:#fff;font-size:13px;font-weight:600;" data-lang="kycApproved">KYC Approved — You're ready to trade!</span>
+        <button onclick="this.parentElement.style.display='none'" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">×</button>
+      </div>
+
+      <!-- Wallet Balance Hero -->
+      <div style="padding:8px 20px 16px;">
+        <p style="color:#94A3B8;font-size:13px;margin-bottom:4px;" data-lang="portfolioValue">Portfolio Value</p>
+        <p style="color:#fff;font-size:32px;font-weight:700;font-family:monospace;">฿284,590</p>
+        <span style="display:inline-block;background:rgba(29,158,117,0.15);color:#1D9E75;padding:4px 10px;border-radius:20px;font-size:13px;font-weight:600;margin-top:6px;">+฿3,240 (+1.15%)</span>
+      </div>
+
+      <!-- Top Movers -->
+      <div style="padding:0 20px;margin-bottom:16px;">
+        <p style="color:#fff;font-size:15px;font-weight:600;margin-bottom:10px;" data-lang="topMovers">Top Movers</p>
+        <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;" class="hide-scrollbar">
+          <div onclick="showScreen(16)" style="min-width:140px;background:#161618;border-radius:12px;padding:14px;cursor:pointer;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;"><i data-lucide="circle-dot" style="width:14px;height:14px;color:#F59E0B;"></i></div>
+              <span style="color:#fff;font-size:13px;font-weight:600;">Gold</span>
+            </div>
+            <p style="color:#fff;font-family:monospace;font-size:14px;">฿92,450</p>
+            <p style="color:#22C55E;font-size:12px;">+2.3%</p>
+          </div>
+          <div style="min-width:140px;background:#161618;border-radius:12px;padding:14px;cursor:pointer;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:rgba(34,197,94,0.15);display:flex;align-items:center;justify-content:center;"><i data-lucide="palm-tree" style="width:14px;height:14px;color:#22C55E;"></i></div>
+              <span style="color:#fff;font-size:13px;font-weight:600;">Palm Oil</span>
+            </div>
+            <p style="color:#fff;font-family:monospace;font-size:14px;">฿3,127</p>
+            <p style="color:#22C55E;font-size:12px;">+3.2%</p>
+          </div>
+          <div style="min-width:140px;background:#161618;border-radius:12px;padding:14px;cursor:pointer;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:rgba(59,130,246,0.15);display:flex;align-items:center;justify-content:center;"><i data-lucide="droplets" style="width:14px;height:14px;color:#3B82F6;"></i></div>
+              <span style="color:#fff;font-size:13px;font-weight:600;">Crude Oil</span>
+            </div>
+            <p style="color:#fff;font-family:monospace;font-size:14px;">฿2,891</p>
+            <p style="color:#22C55E;font-size:12px;">+1.1%</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Insight Card -->
+      <div style="margin:0 20px 16px;padding:16px;border-radius:12px;background:rgba(127,119,221,0.1);border:1px solid rgba(127,119,221,0.2);">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="width:24px;height:24px;border-radius:50%;background:#7F77DD;display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:700;">AI</div>
+          <span style="color:#7F77DD;font-size:13px;font-weight:600;" data-lang="aiInsight">AI Insight</span>
+        </div>
+        <p style="color:#CBD5E1;font-size:13px;line-height:1.5;" data-lang="aiInsightText">Gold up 2.3% — USD weakness driving safe-haven demand. Watch ฿93,000 resistance.</p>
+      </div>
+
+      <!-- Quick Actions -->
+      <div style="padding:0 20px;margin-bottom:16px;">
+        <p style="color:#fff;font-size:15px;font-weight:600;margin-bottom:10px;" data-lang="quickActions">Quick Actions</p>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+          <div onclick="showScreen(20)" style="background:#161618;border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;">
+            <div style="margin-bottom:4px;display:flex;justify-content:center;"><i data-lucide="download" style="width:20px;height:20px;color:#94A3B8;"></i></div>
+            <span style="color:#94A3B8;font-size:11px;" data-lang="deposit">Deposit</span>
+          </div>
+          <div onclick="showScreen(20)" style="background:#161618;border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;">
+            <div style="margin-bottom:4px;display:flex;justify-content:center;"><i data-lucide="upload" style="width:20px;height:20px;color:#94A3B8;"></i></div>
+            <span style="color:#94A3B8;font-size:11px;" data-lang="withdraw">Withdraw</span>
+          </div>
+          <div onclick="showScreen(15)" style="background:#161618;border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;">
+            <div style="margin-bottom:4px;display:flex;justify-content:center;"><i data-lucide="arrow-left-right" style="width:20px;height:20px;color:#94A3B8;"></i></div>
+            <span style="color:#94A3B8;font-size:11px;" data-lang="trade">Trade</span>
+          </div>
+          <div onclick="showScreen(22)" style="background:#161618;border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;">
+            <div style="margin-bottom:4px;display:flex;justify-content:center;"><i data-lucide="bell" style="width:20px;height:20px;color:#94A3B8;"></i></div>
+            <span style="color:#94A3B8;font-size:11px;" data-lang="alerts">Alerts</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 15 — Marketplace -->
+    <div class="screen" id="screen15" style="background:#0D0D0F; padding:50px 0 80px;">
+      <div style="padding:0 16px 12px;">
+        <h2 style="color:#fff;font-size:20px;font-weight:700;margin-bottom:12px;" data-lang="tabMarkets">Markets</h2>
+        <div style="position:relative;">
+          <input type="text" placeholder="Search assets..." style="width:100%;padding:10px 16px 10px 36px;border-radius:10px;border:none;background:#161618;color:#fff;font-size:14px;outline:none;">
+          <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#64748B;display:flex;"><i data-lucide="search" style="width:16px;height:16px;"></i></span>
+        </div>
+      </div>
+      <div id="marketList" style="padding:0 16px;display:flex;flex-direction:column;gap:2px;">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+
+    <!-- SCREEN 16 — Asset Detail (Gold) -->
+    <div class="screen" id="screen16" style="background:#0D0D0F; padding:50px 0 0;">
+      <button class="back-btn" onclick="showScreen(15)" style="color:#1D9E75;">← <span data-lang="back">Back</span></button>
+      <div style="padding:20px 20px 0;">
+        <h2 style="color:#fff;font-size:22px;font-weight:700;" data-lang="goldFutures">Gold Futures</h2>
+        <div style="display:flex;align-items:baseline;gap:10px;margin:6px 0 16px;">
+          <span style="color:#fff;font-size:28px;font-weight:700;font-family:monospace;">฿92,450</span>
+          <span style="background:rgba(34,197,94,0.15);color:#22C55E;padding:3px 8px;border-radius:12px;font-size:13px;font-weight:600;">+2.3%</span>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div style="padding:0 12px;margin-bottom:16px;">
+        <svg id="assetChart" viewBox="0 0 360 160" style="width:100%;height:160px;">
+          <polyline fill="none" stroke="#1D9E75" stroke-width="2" points="" id="chartLine"/>
+          <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1D9E75" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#1D9E75" stop-opacity="0"/>
+          </linearGradient>
+          <polygon fill="url(#chartGrad)" points="" id="chartArea"/>
+        </svg>
+      </div>
+
+      <!-- Timeframe Tabs -->
+      <div style="display:flex;gap:0;padding:0 20px;margin-bottom:16px;">
+        <button class="tf-tab active" onclick="selectTimeframe(this)">1D</button>
+        <button class="tf-tab" onclick="selectTimeframe(this)">1W</button>
+        <button class="tf-tab" onclick="selectTimeframe(this)">1M</button>
+        <button class="tf-tab" onclick="selectTimeframe(this)">1Y</button>
+      </div>
+
+      <!-- Info Grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(255,255,255,0.05);margin:0 20px 20px;border-radius:12px;overflow:hidden;">
+        <div style="background:#161618;padding:12px;">
+          <p style="color:#64748B;font-size:11px;" data-lang="lastUpdated">Last Updated</p>
+          <p style="color:#fff;font-size:13px;">Just now</p>
+        </div>
+        <div style="background:#161618;padding:12px;">
+          <p style="color:#64748B;font-size:11px;" data-lang="volume">Volume</p>
+          <p style="color:#fff;font-size:13px;font-family:monospace;">1,240 lots</p>
+        </div>
+        <div style="background:#161618;padding:12px;">
+          <p style="color:#64748B;font-size:11px;" data-lang="open">Open</p>
+          <p style="color:#fff;font-size:13px;font-family:monospace;">฿90,200</p>
+        </div>
+        <div style="background:#161618;padding:12px;">
+          <p style="color:#64748B;font-size:11px;" data-lang="high">High</p>
+          <p style="color:#fff;font-size:13px;font-family:monospace;">฿92,800</p>
+        </div>
+        <div style="background:#161618;padding:12px;">
+          <p style="color:#64748B;font-size:11px;" data-lang="low">Low</p>
+          <p style="color:#fff;font-size:13px;font-family:monospace;">฿90,100</p>
+        </div>
+        <div style="background:#161618;padding:12px;">
+          <p style="color:#64748B;font-size:11px;" data-lang="dayChange">Day Change</p>
+          <p style="color:#22C55E;font-size:13px;font-family:monospace;">+฿2,250</p>
+        </div>
+      </div>
+
+      <!-- Buy / Sell Sticky -->
+      <div style="position:sticky;bottom:72px;padding:12px 20px;background:#0D0D0F;display:flex;gap:10px;border-top:1px solid rgba(255,255,255,0.07);">
+        <button onclick="openOrder('buy')" style="flex:1;padding:14px;border-radius:12px;background:#1D9E75;color:#fff;font-size:16px;font-weight:700;border:none;cursor:pointer;" data-lang="buy">BUY</button>
+        <button onclick="openOrder('sell')" style="flex:1;padding:14px;border-radius:12px;background:#EF4444;color:#fff;font-size:16px;font-weight:700;border:none;cursor:pointer;" data-lang="sell">SELL</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 17 — Order Entry -->
+    <div class="screen" id="screen17" style="background:#0D0D0F; padding:50px 0 80px;">
+      <button class="back-btn" onclick="showScreen(16)">← <span data-lang="back">Back</span></button>
+      <div style="padding:20px 20px 0;">
+        <h2 id="orderTitle" style="color:#fff;font-size:22px;font-weight:700;margin-bottom:20px;">Buy Gold</h2>
+
+        <!-- Order Type Toggle -->
+        <div style="display:flex;background:#161618;border-radius:10px;padding:3px;margin-bottom:20px;">
+          <button class="order-type-btn active" onclick="selectOrderType(this, 'market')" data-lang="market">Market</button>
+          <button class="order-type-btn" onclick="selectOrderType(this, 'limit')" data-lang="limit">Limit</button>
+        </div>
+
+        <!-- Quantity -->
+        <div style="margin-bottom:20px;">
+          <label style="color:#94A3B8;font-size:13px;display:block;margin-bottom:8px;" data-lang="quantity">Quantity</label>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button onclick="adjustQty(-1)" style="width:38px;height:38px;flex-shrink:0;border-radius:50%;border:1px solid #334155;background:transparent;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
+            <input id="qtyInput" type="text" inputmode="numeric" pattern="[0-9]*" value="1" style="flex:1;min-width:0;text-align:center;background:#161618;border:1px solid #334155;border-radius:10px;padding:10px 8px;color:#fff;font-size:18px;font-weight:700;font-family:monospace;outline:none;" oninput="updateOrderTotal()">
+            <button onclick="adjustQty(1)" style="width:38px;height:38px;flex-shrink:0;border-radius:50%;border:1px solid #334155;background:transparent;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
+          </div>
+        </div>
+
+        <!-- Live Total -->
+        <div style="background:#161618;border-radius:12px;padding:16px;margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="color:#94A3B8;font-size:13px;" data-lang="price">Price</span>
+            <span style="color:#fff;font-family:monospace;font-size:14px;">฿92,450</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="color:#94A3B8;font-size:13px;" data-lang="fee">Fee (0.1%)</span>
+            <span id="orderFee" style="color:#fff;font-family:monospace;font-size:14px;">฿92.45</span>
+          </div>
+          <div style="border-top:1px solid #334155;padding-top:10px;display:flex;justify-content:space-between;">
+            <span style="color:#fff;font-size:15px;font-weight:600;" data-lang="total">Total</span>
+            <span id="orderTotal" style="color:#fff;font-family:monospace;font-size:18px;font-weight:700;">฿92,542.45</span>
+          </div>
+        </div>
+
+        <!-- Confirm Button (hold-to-confirm for >10000) -->
+        <div style="position:relative;">
+          <button id="confirmOrderBtn" class="btn-teal" onmousedown="startHoldConfirm()" onmouseup="cancelHoldConfirm()" onmouseleave="cancelHoldConfirm()" ontouchstart="startHoldConfirm()" ontouchend="cancelHoldConfirm()" data-lang="confirmOrder">Confirm Order</button>
+          <div id="holdRing" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;display:none;">
+            <svg width="48" height="48" viewBox="0 0 48 48">
+              <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="3"/>
+              <circle id="holdProgress" cx="24" cy="24" r="20" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="125.66" stroke-dashoffset="125.66" stroke-linecap="round" transform="rotate(-90 24 24)" style="transition:stroke-dashoffset 1.5s linear;"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 18 — Order Success -->
+    <div class="screen" id="screen18" style="background:#0D0D0F; padding:50px 0 80px; align-items:center; justify-content:center;">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px;">
+        <!-- Animated checkmark -->
+        <div style="width:80px;height:80px;border-radius:50%;background:rgba(29,158,117,0.15);display:flex;align-items:center;justify-content:center;margin-bottom:24px;">
+          <svg width="48" height="48" viewBox="0 0 48 48">
+            <circle cx="24" cy="24" r="22" fill="none" stroke="#1D9E75" stroke-width="2.5">
+              <animate attributeName="stroke-dasharray" from="0 138" to="138 138" dur="0.6s" fill="freeze"/>
+            </circle>
+            <polyline points="14,24 21,31 34,18" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <animate attributeName="stroke-dasharray" from="0 40" to="40 40" dur="0.4s" begin="0.5s" fill="freeze"/>
+            </polyline>
+          </svg>
+        </div>
+        <h2 style="color:#fff;font-size:24px;font-weight:700;margin-bottom:8px;" data-lang="orderPlaced">Order Placed!</h2>
+        <div style="background:#161618;border-radius:12px;padding:16px;width:100%;margin-top:16px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="color:#94A3B8;font-size:13px;" data-lang="asset">Asset</span>
+            <span style="color:#fff;font-size:14px;">Gold Futures</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="color:#94A3B8;font-size:13px;" data-lang="quantity">Quantity</span>
+            <span id="successQty" style="color:#fff;font-size:14px;">1 unit</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="color:#94A3B8;font-size:13px;" data-lang="total">Total</span>
+            <span id="successTotal" style="color:#fff;font-family:monospace;font-size:14px;">฿92,450</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span style="color:#94A3B8;font-size:13px;" data-lang="orderId">Order ID</span>
+            <span style="color:#fff;font-family:monospace;font-size:14px;">#TH20260410-0042</span>
+          </div>
+        </div>
+      </div>
+      <div style="width:100%;padding:0 24px 20px;">
+        <button class="btn-teal" style="margin-bottom:10px;" onclick="showScreen(19)" data-lang="viewPortfolio">View Portfolio</button>
+        <button class="btn-ghost" style="display:block;text-align:center;width:100%;" onclick="showScreen(15)" data-lang="backToMarkets">Back to Markets</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 19 — Portfolio -->
+    <div class="screen" id="screen19" style="background:#0D0D0F; padding:50px 0 80px;">
+      <div style="padding:8px 20px 16px;">
+        <p style="color:#94A3B8;font-size:13px;margin-bottom:4px;" data-lang="totalValue">Total Value</p>
+        <p style="color:#fff;font-size:32px;font-weight:700;font-family:monospace;">฿284,590</p>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+          <span style="color:#94A3B8;font-size:13px;" data-lang="todayPnl">Today's P&L</span>
+          <span style="color:#22C55E;font-size:14px;font-weight:600;">+฿3,240 (+1.15%)</span>
+        </div>
+      </div>
+
+      <!-- Donut Chart -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:20px;padding:16px 20px;">
+        <div style="width:120px;height:120px;border-radius:50%;background:conic-gradient(#1D9E75 0% 68%, #3B82F6 68% 86%, #64748B 86% 100%);display:flex;align-items:center;justify-content:center;">
+          <div style="width:72px;height:72px;border-radius:50%;background:#0D0D0F;"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:#1D9E75;"></div>
+            <span style="color:#CBD5E1;font-size:13px;">Gold 68%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:#3B82F6;"></div>
+            <span style="color:#CBD5E1;font-size:13px;">Silver 18%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:#64748B;"></div>
+            <span style="color:#CBD5E1;font-size:13px;">Oil 14%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Holdings List -->
+      <div style="padding:8px 20px;">
+        <p style="color:#fff;font-size:15px;font-weight:600;margin-bottom:12px;" data-lang="holdings">Holdings</p>
+
+        <div style="background:#161618;border-radius:12px;padding:14px;margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;"><i data-lucide="circle-dot" style="width:14px;height:14px;color:#F59E0B;"></i></div>
+              <div>
+                <p style="color:#fff;font-size:14px;font-weight:600;">Gold</p>
+                <p style="color:#64748B;font-size:12px;">2.1 <span data-lang="units">units</span></p>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <p style="color:#fff;font-family:monospace;font-size:14px;">฿194,145</p>
+              <p style="color:#22C55E;font-size:12px;">+฿8,200</p>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#161618;border-radius:12px;padding:14px;margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:rgba(148,163,184,0.15);display:flex;align-items:center;justify-content:center;"><i data-lucide="coins" style="width:14px;height:14px;color:#94A3B8;"></i></div>
+              <div>
+                <p style="color:#fff;font-size:14px;font-weight:600;">Silver</p>
+                <p style="color:#64748B;font-size:12px;">40 <span data-lang="units">units</span></p>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <p style="color:#fff;font-family:monospace;font-size:14px;">฿49,920</p>
+              <p style="color:#EF4444;font-size:12px;">-฿1,080</p>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#161618;border-radius:12px;padding:14px;margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:rgba(59,130,246,0.15);display:flex;align-items:center;justify-content:center;"><i data-lucide="droplets" style="width:14px;height:14px;color:#3B82F6;"></i></div>
+              <div>
+                <p style="color:#fff;font-size:14px;font-weight:600;">Crude Oil</p>
+                <p style="color:#64748B;font-size:12px;">14 <span data-lang="units">units</span></p>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <p style="color:#fff;font-family:monospace;font-size:14px;">฿40,474</p>
+              <p style="color:#EF4444;font-size:12px;">-฿3,878</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 20 — Wallet -->
+    <div class="screen" id="screen20" style="background:#0D0D0F; padding:50px 0 80px;">
+      <div style="padding:8px 20px 16px;">
+        <p style="color:#94A3B8;font-size:13px;margin-bottom:4px;" data-lang="walletBalance">Wallet Balance</p>
+        <p style="color:#fff;font-size:32px;font-weight:700;font-family:monospace;">฿48,320</p>
+      </div>
+
+      <!-- Wallet Tabs -->
+      <div style="display:flex;gap:0;padding:0 20px;margin-bottom:16px;">
+        <button class="wallet-tab active" onclick="switchWalletTab('overview')" data-lang="overview">Overview</button>
+        <button class="wallet-tab" onclick="switchWalletTab('deposit')" data-lang="deposit">Deposit</button>
+        <button class="wallet-tab" onclick="switchWalletTab('withdraw')" data-lang="withdraw">Withdraw</button>
+        <button class="wallet-tab" onclick="switchWalletTab('history')" data-lang="walletHistory">History</button>
+      </div>
+
+      <!-- Overview Tab -->
+      <div id="walletOverview" class="wallet-panel" style="padding:0 20px;">
+        <div style="background:#161618;border-radius:12px;padding:16px;margin-bottom:12px;">
+          <p style="color:#94A3B8;font-size:12px;margin-bottom:4px;" data-lang="availableBalance">Available Balance</p>
+          <p style="color:#fff;font-family:monospace;font-size:22px;font-weight:700;">฿48,320</p>
+        </div>
+        <div style="background:#161618;border-radius:12px;padding:16px;">
+          <p style="color:#94A3B8;font-size:12px;margin-bottom:10px;" data-lang="recentTransactions">Recent Transactions</p>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div><p style="color:#fff;font-size:14px;" data-lang="depositAction">Deposit</p><p style="color:#64748B;font-size:12px;" data-lang="threeDaysAgo">3 days ago</p></div>
+              <span style="color:#22C55E;font-family:monospace;font-size:14px;">+฿50,000</span>
+            </div>
+            <div style="border-top:1px solid rgba(255,255,255,0.05);padding-top:12px;display:flex;justify-content:space-between;align-items:center;">
+              <div><p style="color:#fff;font-size:14px;" data-lang="buyGold">Buy Gold</p><p style="color:#64748B;font-size:12px;" data-lang="twoDaysAgo">2 days ago</p></div>
+              <span style="color:#EF4444;font-family:monospace;font-size:14px;">-฿18,490</span>
+            </div>
+            <div style="border-top:1px solid rgba(255,255,255,0.05);padding-top:12px;display:flex;justify-content:space-between;align-items:center;">
+              <div><p style="color:#fff;font-size:14px;" data-lang="sellSilver">Sell Silver</p><p style="color:#64748B;font-size:12px;" data-lang="yesterday">Yesterday</p></div>
+              <span style="color:#22C55E;font-family:monospace;font-size:14px;">+฿12,480</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Deposit Tab -->
+      <div id="walletDeposit" class="wallet-panel" style="padding:0 20px;display:none;">
+        <div style="background:#161618;border-radius:12px;padding:16px;margin-bottom:12px;">
+          <p style="color:#fff;font-size:15px;font-weight:600;margin-bottom:12px;" data-lang="promptpay">PromptPay QR</p>
+          <!-- QR Placeholder -->
+          <div style="width:180px;height:180px;margin:0 auto 12px;border-radius:8px;overflow:hidden;">
+            <svg width="180" height="180" viewBox="0 0 180 180">
+              <defs><pattern id="checker" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#333"/><rect x="6" y="6" width="6" height="6" fill="#333"/><rect x="6" width="6" height="6" fill="#222"/><rect y="6" width="6" height="6" fill="#222"/></pattern></defs>
+              <rect width="180" height="180" fill="url(#checker)"/>
+            </svg>
+          </div>
+          <p style="color:#64748B;font-size:12px;text-align:center;" data-lang="scanQr">Scan to deposit via PromptPay</p>
+        </div>
+        <div style="background:#161618;border-radius:12px;padding:16px;">
+          <p style="color:#94A3B8;font-size:12px;margin-bottom:6px;" data-lang="bankTransfer">Bank Transfer</p>
+          <p style="color:#fff;font-size:14px;font-weight:600;">TradePlatform Co., Ltd.</p>
+          <p style="color:#fff;font-family:monospace;font-size:16px;margin:6px 0;">xxx-x-x4829-x</p>
+          <p style="color:#64748B;font-size:13px;">Kasikorn Bank (KBank)</p>
+        </div>
+      </div>
+
+      <!-- Withdraw Tab -->
+      <div id="walletWithdraw" class="wallet-panel" style="padding:0 20px;display:none;">
+        <div style="margin-bottom:16px;">
+          <label style="color:#94A3B8;font-size:13px;display:block;margin-bottom:8px;" data-lang="withdrawAmount">Amount to Withdraw</label>
+          <input type="text" placeholder="฿0" style="width:100%;padding:14px 16px;border-radius:12px;border:1px solid #334155;background:#161618;color:#fff;font-size:20px;font-family:monospace;outline:none;">
+        </div>
+        <div style="background:#161618;border-radius:12px;padding:16px;margin-bottom:16px;">
+          <p style="color:#94A3B8;font-size:12px;margin-bottom:4px;" data-lang="withdrawTo">Withdraw to</p>
+          <p style="color:#fff;font-size:14px;font-weight:600;">Kasikorn Bank</p>
+          <p style="color:#fff;font-family:monospace;font-size:14px;">xxx-x-x4829-x</p>
+        </div>
+        <button class="btn-teal" onclick="showToast(lang==='en'?'Withdrawal submitted!':'ส่งคำขอถอนเงินแล้ว!')" data-lang="withdrawBtn">Withdraw</button>
+      </div>
+
+      <!-- History Tab -->
+      <div id="walletHistory" class="wallet-panel" style="padding:0 20px;display:none;">
+        <div style="background:#161618;border-radius:12px;overflow:hidden;">
+          <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <div>
+              <span style="display:inline-block;padding:2px 8px;border-radius:6px;background:rgba(34,197,94,0.15);color:#22C55E;font-size:11px;font-weight:600;" data-lang="depositAction">Deposit</span>
+              <p style="color:#fff;font-size:13px;margin-top:4px;" data-lang="depositDesc">Bank transfer deposit</p>
+              <p style="color:#64748B;font-size:11px;">Apr 7, 2026</p>
+            </div>
+            <span style="color:#22C55E;font-family:monospace;font-size:14px;">+฿50,000</span>
+          </div>
+          <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <div>
+              <span style="display:inline-block;padding:2px 8px;border-radius:6px;background:rgba(239,68,68,0.15);color:#EF4444;font-size:11px;font-weight:600;" data-lang="tradeLabel">Trade</span>
+              <p style="color:#fff;font-size:13px;margin-top:4px;" data-lang="buyGold">Buy Gold</p>
+              <p style="color:#64748B;font-size:11px;">Apr 8, 2026</p>
+            </div>
+            <span style="color:#EF4444;font-family:monospace;font-size:14px;">-฿18,490</span>
+          </div>
+          <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <span style="display:inline-block;padding:2px 8px;border-radius:6px;background:rgba(34,197,94,0.15);color:#22C55E;font-size:11px;font-weight:600;" data-lang="tradeLabel">Trade</span>
+              <p style="color:#fff;font-size:13px;margin-top:4px;" data-lang="sellSilver">Sell Silver</p>
+              <p style="color:#64748B;font-size:11px;">Apr 9, 2026</p>
+            </div>
+            <span style="color:#22C55E;font-family:monospace;font-size:14px;">+฿12,480</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 21 — AI Chat -->
+    <div class="screen" id="screen21" style="background:#0D0D0F; padding:50px 0 0; display:none; flex-direction:column;">
+      <button class="back-btn" onclick="showScreen(14)">← <span data-lang="back">Back</span></button>
+      <div style="padding:20px 20px 0;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <div style="width:32px;height:32px;border-radius:50%;background:#7F77DD;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;">AI</div>
+          <h2 style="color:#fff;font-size:18px;font-weight:700;" data-lang="aiAssistant">AI Assistant</h2>
+        </div>
+      </div>
+
+      <!-- Chat Messages -->
+      <div id="chatMessages" style="flex:1;overflow-y:auto;padding:0 20px 12px;display:flex;flex-direction:column;gap:12px;">
+        <!-- User message -->
+        <div style="align-self:flex-end;max-width:80%;background:#1D9E75;border-radius:16px 16px 4px 16px;padding:12px 14px;">
+          <p style="color:#fff;font-size:14px;" data-lang="chatUser1">What's driving the gold price today?</p>
+        </div>
+        <!-- AI message -->
+        <div style="align-self:flex-start;max-width:85%;display:flex;gap:8px;">
+          <div style="width:24px;height:24px;border-radius:50%;background:#7F77DD;display:flex;align-items:center;justify-content:center;color:#fff;font-size:8px;font-weight:700;flex-shrink:0;margin-top:2px;">AI</div>
+          <div style="background:rgba(127,119,221,0.1);border-radius:4px 16px 16px 16px;padding:12px 14px;">
+            <p style="color:#CBD5E1;font-size:14px;line-height:1.5;" data-lang="chatAI1">Gold is up 2.3% today, driven by USD weakness and increased safe-haven demand ahead of the Fed announcement. Current resistance at ฿93,000. Consider watching volume closely.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Suggestion Chips -->
+      <div style="padding:8px 20px;display:flex;gap:8px;overflow-x:auto;" class="hide-scrollbar">
+        <button class="chip-btn" onclick="sendChip(this)" data-lang="chip1">Gold outlook?</button>
+        <button class="chip-btn" onclick="sendChip(this)" data-lang="chip2">Top movers today</button>
+        <button class="chip-btn" onclick="sendChip(this)" data-lang="chip3">My P&L summary</button>
+      </div>
+
+      <!-- Input Bar -->
+      <div style="padding:10px 20px 84px;display:flex;gap:8px;border-top:1px solid rgba(255,255,255,0.07);">
+        <input id="chatInput" type="text" style="flex:1;padding:10px 14px;border-radius:20px;border:1px solid #334155;background:#161618;color:#fff;font-size:14px;outline:none;" placeholder="Ask anything...">
+        <button onclick="sendChat()" style="width:40px;height:40px;border-radius:50%;background:#1D9E75;border:none;color:#fff;font-size:16px;cursor:pointer;">↑</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 22 — Notifications -->
+    <div class="screen" id="screen22" style="background:#0D0D0F; padding:50px 0 80px;">
+      <div style="padding:8px 20px 16px;">
+        <h2 style="color:#fff;font-size:20px;font-weight:700;" data-lang="notifications">Notifications</h2>
+      </div>
+      <div style="padding:0 20px;display:flex;flex-direction:column;gap:2px;">
+        <!-- Notification 1 - unread -->
+        <div class="notif-row" onclick="this.querySelector('.notif-dot').style.display='none'" style="background:#161618;border-radius:12px;padding:14px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;margin-bottom:8px;">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(29,158,117,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <span style="color:#1D9E75;font-size:16px;display:flex;"><i data-lucide="trending-up" style="width:16px;height:16px;"></i></span>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <p style="color:#fff;font-size:14px;font-weight:600;" data-lang="notif1Title">Gold hit your alert ฿92,000 ✓</p>
+              <div class="notif-dot" style="width:8px;height:8px;border-radius:50%;background:#1D9E75;flex-shrink:0;"></div>
+            </div>
+            <p style="color:#64748B;font-size:12px;margin-top:2px;" data-lang="notif1Time">2 hours ago</p>
+          </div>
+        </div>
+        <!-- Notification 2 - unread -->
+        <div class="notif-row" onclick="this.querySelector('.notif-dot').style.display='none'" style="background:#161618;border-radius:12px;padding:14px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;margin-bottom:8px;">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(59,130,246,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <span style="color:#3B82F6;font-size:16px;display:flex;"><i data-lucide="circle-check" style="width:16px;height:16px;"></i></span>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <p style="color:#fff;font-size:14px;font-weight:600;" data-lang="notif2Title">Buy order filled — 0.5 units Gold at ฿91,800</p>
+              <div class="notif-dot" style="width:8px;height:8px;border-radius:50%;background:#1D9E75;flex-shrink:0;"></div>
+            </div>
+            <p style="color:#64748B;font-size:12px;margin-top:2px;" data-lang="notif2Time">5 hours ago</p>
+          </div>
+        </div>
+        <!-- Notification 3 - read -->
+        <div class="notif-row" style="background:#161618;border-radius:12px;padding:14px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(148,163,184,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <span style="color:#94A3B8;font-size:16px;display:flex;"><i data-lucide="shield-check" style="width:16px;height:16px;"></i></span>
+          </div>
+          <div style="flex:1;">
+            <p style="color:#fff;font-size:14px;font-weight:600;" data-lang="notif3Title">KYC verification approved</p>
+            <p style="color:#64748B;font-size:12px;margin-top:2px;" data-lang="notif3Time">Yesterday</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 23 — Profile -->
+    <div class="screen" id="screen23" style="background:#0D0D0F; padding:50px 0 80px;">
+      <div style="padding:8px 20px 16px;">
+        <h2 style="color:#fff;font-size:20px;font-weight:700;" data-lang="tabProfile">Profile</h2>
+      </div>
+
+      <!-- Profile Card -->
+      <div style="padding:0 20px;margin-bottom:20px;">
+        <div style="background:#161618;border-radius:16px;padding:24px;display:flex;flex-direction:column;align-items:center;">
+          <div style="width:64px;height:64px;border-radius:50%;background:#1D9E75;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:700;margin-bottom:12px;">ST</div>
+          <p style="color:#fff;font-size:18px;font-weight:700;">Somchai Thongdee</p>
+          <p style="color:#64748B;font-size:13px;margin-top:2px;">somchai@email.com</p>
+          <span style="display:inline-block;margin-top:8px;padding:4px 12px;border-radius:20px;background:rgba(34,197,94,0.15);color:#22C55E;font-size:12px;font-weight:600;" data-lang="kycVerified">KYC Verified</span>
+        </div>
+      </div>
+
+      <!-- Settings List -->
+      <div style="padding:0 20px;">
+        <div style="background:#161618;border-radius:12px;overflow:hidden;">
+          <div onclick="document.getElementById('langModal').style.display='flex'" style="padding:16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="color:#fff;font-size:14px;" data-lang="language">Language</span>
+            <span style="color:#64748B;font-size:14px;" id="profileLangLabel">English</span>
+          </div>
+          <div style="padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="color:#fff;font-size:14px;" data-lang="notificationsSettings">Notifications</span>
+            <span style="color:#64748B;font-size:14px;">›</span>
+          </div>
+          <div style="padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="color:#fff;font-size:14px;" data-lang="security">Security</span>
+            <span style="color:#64748B;font-size:14px;">›</span>
+          </div>
+          <div style="padding:16px;display:flex;justify-content:space-between;align-items:center;">
+            <span style="color:#fff;font-size:14px;" data-lang="about">About</span>
+            <span style="color:#64748B;font-size:14px;">›</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Language Modal (hidden) -->
+      <div id="langModal" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center;padding:40px;">
+        <div style="background:#161618;border-radius:16px;padding:24px;width:100%;">
+          <h3 style="color:#fff;font-size:18px;font-weight:700;margin-bottom:16px;" data-lang="language">Language</h3>
+          <div onclick="setLang('en');document.getElementById('langModal').style.display='none';document.getElementById('profileLangLabel').textContent='English'" style="padding:14px;border-radius:10px;border:2px solid #1D9E75;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;">
+            <span style="color:#fff;font-size:15px;">English</span>
+            <span style="color:#1D9E75;">✓</span>
+          </div>
+          <div onclick="setLang('th');document.getElementById('langModal').style.display='none';document.getElementById('profileLangLabel').textContent='ไทย'" style="padding:14px;border-radius:10px;border:2px solid #334155;cursor:pointer;">
+            <span style="color:#fff;font-size:15px;">ไทย</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Tab Bar (hidden on screens 1-13) -->
+    <div class="tab-bar" id="tabBar" style="display:none;">
+      <div class="tab-item active" onclick="showScreen(14)" data-tab="home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
+        <span data-lang="tabHome">Home</span>
+      </div>
+      <div class="tab-item" onclick="showScreen(15)" data-tab="markets">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-5"/></svg>
+        <span data-lang="tabMarkets">Markets</span>
+      </div>
+      <div class="tab-item" onclick="showScreen(19)" data-tab="portfolio">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6 3"/></svg>
+        <span data-lang="tabPortfolio">Portfolio</span>
+      </div>
+      <div class="tab-item" onclick="showScreen(20)" data-tab="wallet">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="15" r="1.5"/></svg>
+        <span data-lang="tabWallet">Wallet</span>
+      </div>
+      <div class="tab-item" onclick="showScreen(23)" data-tab="profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
+        <span data-lang="tabProfile">Profile</span>
+      </div>
+    </div>
+
+    <!-- Watermark -->
+    <div class="watermark">DEMO — Mocked Data</div>
+  </div>
+</div>
+
+<!-- Dot Navigation -->
+<div class="dot-nav" id="dotNav"></div>
+
+<!-- Language Toggle -->
+<div class="lang-toggle">
+  <button class="lang-btn active" id="langEN" onclick="setLang('en')">EN</button>
+  <button class="lang-btn" id="langTH" onclick="setLang('th')">TH</button>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Language System ──
+let lang = 'en';
+const translations = {
+  appName: { en: 'TradePlatform', th: 'TradePlatform' },
+  welcomeTitle: { en: 'Trade Thai Commodities', th: 'เทรดสินค้าโภคภัณฑ์ไทย' },
+  welcomeSubtitle: { en: 'Real-time prices, AI insights, and seamless trading', th: 'ราคาเรียลไทม์ ข้อมูลเชิงลึกด้วย AI และการเทรดที่ราบรื่น' },
+  createAccount: { en: 'Create Account', th: 'ลงทะเบียน' },
+  login: { en: 'Log In', th: 'เข้าสู่ระบบ' },
+  back: { en: 'Back', th: 'กลับ' },
+  register: { en: 'Register', th: 'ลงทะเบียน' },
+  loginTitle: { en: 'Log In', th: 'เข้าสู่ระบบ' },
+  fullName: { en: 'Full Name', th: 'ชื่อ-นามสกุล' },
+  email: { en: 'Email', th: 'อีเมล' },
+  phone: { en: 'Phone', th: 'โทรศัพท์' },
+  password: { en: 'Password', th: 'รหัสผ่าน' },
+  continue: { en: 'Continue', th: 'ดำเนินการต่อ' },
+  otpTitle: { en: 'Verify Your Number', th: 'ยืนยันหมายเลขของคุณ' },
+  otpSubtitle: { en: 'Enter 6-digit code sent to +66 XX XXX XXXX', th: 'กรอกรหัส 6 หลักที่ส่งไปยัง +66 XX XXX XXXX' },
+  verify: { en: 'Verify', th: 'ยืนยัน' },
+  resendCode: { en: 'Resend code', th: 'ส่งรหัสอีกครั้ง' },
+  pinTitle: { en: 'Create Your PIN', th: 'สร้าง PIN ของคุณ' },
+  pinSubtitle: { en: 'Enter a 6-digit PIN for secure access', th: 'กรอก PIN 6 หลักเพื่อความปลอดภัย' },
+  biometricTitle: { en: 'Enable Face ID', th: 'เปิดใช้ Face ID' },
+  biometricSubtitle: { en: 'Use Face ID for faster and more secure login', th: 'ใช้ Face ID เพื่อเข้าสู่ระบบเร็วและปลอดภัยยิ่งขึ้น' },
+  enable: { en: 'Enable', th: 'เปิดใช้งาน' },
+  notNow: { en: 'Not now', th: 'ไม่ใช่ตอนนี้' },
+  tabHome: { en: 'Home', th: 'หน้าหลัก' },
+  tabMarkets: { en: 'Markets', th: 'ตลาด' },
+  tabPortfolio: { en: 'Portfolio', th: 'พอร์ตโฟลิโอ' },
+  tabWallet: { en: 'Wallet', th: 'กระเป๋าเงิน' },
+  tabProfile: { en: 'Profile', th: 'โปรไฟล์' },
+  // KYC screens
+  kycTitle: { en: 'Verify Your Identity', th: 'ยืนยันตัวตน' },
+  kycSubtitle: { en: 'Thai financial regulations require identity verification before trading', th: 'กฎระเบียบการเงินไทยกำหนดให้ยืนยันตัวตนก่อนการเทรด' },
+  kycNeedTitle: { en: "What you'll need:", th: 'สิ่งที่ต้องเตรียม:' },
+  kycNeed1: { en: 'Thai ID or Passport', th: 'บัตรประชาชนหรือหนังสือเดินทาง' },
+  kycNeed2: { en: 'Selfie photo', th: 'ภาพถ่ายเซลฟี่' },
+  kycNeed3: { en: '3 minutes', th: '3 นาที' },
+  startVerification: { en: 'Start Verification', th: 'เริ่มยืนยันตัวตน' },
+  doLater: { en: 'Do this later', th: 'ทำภายหลัง' },
+  kycStep1Label: { en: 'Step 1 of 4', th: 'ขั้นตอนที่ 1 จาก 4' },
+  kycStep1Title: { en: 'Personal Information', th: 'ข้อมูลส่วนตัว' },
+  fullNameThai: { en: 'Full Name (Thai)', th: 'ชื่อ-นามสกุล (ภาษาไทย)' },
+  dob: { en: 'Date of Birth', th: 'วันเกิด' },
+  nationalId: { en: 'National ID Number', th: 'เลขประจำตัวประชาชน' },
+  idExpiry: { en: 'ID Expiry Date', th: 'วันหมดอายุบัตร' },
+  kycStep2Label: { en: 'Step 2 of 4', th: 'ขั้นตอนที่ 2 จาก 4' },
+  kycStep2Title: { en: 'Select Document Type', th: 'เลือกประเภทเอกสาร' },
+  docNationalId: { en: 'Thai National ID', th: 'บัตรประชาชนไทย' },
+  docNationalIdDesc: { en: 'Government-issued identification card', th: 'บัตรประชาชนที่ออกโดยรัฐบาล' },
+  recommended: { en: 'Recommended', th: 'แนะนำ' },
+  docPassport: { en: 'Passport', th: 'หนังสือเดินทาง' },
+  docPassportDesc: { en: 'Valid international passport', th: 'หนังสือเดินทางระหว่างประเทศที่ยังไม่หมดอายุ' },
+  docLicence: { en: "Driver's Licence", th: 'ใบขับขี่' },
+  docLicenceDesc: { en: "Thai driver's licence", th: 'ใบขับขี่ไทย' },
+  kycStep2bLabel: { en: 'Step 2 of 4 — Capture', th: 'ขั้นตอนที่ 2 จาก 4 — ถ่ายภาพ' },
+  captureDocTitle: { en: 'Capture Document', th: 'ถ่ายเอกสาร' },
+  alignDoc: { en: 'Align document within frame', th: 'จัดวางเอกสารในกรอบ' },
+  capture: { en: 'Capture', th: 'ถ่ายภาพ' },
+  kycStep3Label: { en: 'Step 3 of 4', th: 'ขั้นตอนที่ 3 จาก 4' },
+  selfieTitle: { en: 'Take a Selfie', th: 'ถ่ายเซลฟี่' },
+  positionFace: { en: 'Position your face', th: 'จัดตำแหน่งใบหน้า' },
+  captureSelfie: { en: 'Capture Selfie', th: 'ถ่ายเซลฟี่' },
+  kycStep4Label: { en: 'Step 4 of 4', th: 'ขั้นตอนที่ 4 จาก 4' },
+  reviewTitle: { en: 'Review & Submit', th: 'ตรวจสอบและส่ง' },
+  personalInfo: { en: 'Personal Information', th: 'ข้อมูลส่วนตัว' },
+  documentType: { en: 'Document Type', th: 'ประเภทเอกสาร' },
+  captured: { en: 'Captured', th: 'ถ่ายแล้ว' },
+  selfie: { en: 'Selfie', th: 'เซลฟี่' },
+  pdpaConsent: { en: 'I consent to the collection and processing of my personal data in accordance with PDPA regulations.', th: 'ฉันยินยอมให้เก็บรวบรวมและประมวลผลข้อมูลส่วนบุคคลตามข้อกำหนด PDPA' },
+  submitReview: { en: 'Submit for Review', th: 'ส่งเพื่อตรวจสอบ' },
+  kycPendingTitle: { en: 'Under Review', th: 'อยู่ระหว่างการตรวจสอบ' },
+  kycPendingSubtitle: { en: 'Your documents are being verified. This usually takes 1–2 business days.', th: 'เอกสารของคุณกำลังได้รับการตรวจสอบ โดยปกติใช้เวลา 1-2 วันทำการ' },
+  browseMarkets: { en: 'Browse markets →', th: 'ดูตลาด →' },
+  // Dashboard & trading screens
+  kycApproved: { en: "KYC Approved — You're ready to trade!", th: 'KYC อนุมัติแล้ว — คุณพร้อมเทรดแล้ว!' },
+  kycUnderReview: { en: 'KYC Under Review — Verification in progress', th: 'KYC อยู่ระหว่างตรวจสอบ — กำลังดำเนินการยืนยัน' },
+  portfolioValue: { en: 'Portfolio Value', th: 'มูลค่าพอร์ต' },
+  topMovers: { en: 'Top Movers', th: 'สินทรัพย์มาแรง' },
+  aiInsight: { en: 'AI Insight', th: 'ข้อมูลเชิงลึก AI' },
+  aiInsightText: { en: 'Gold up 2.3% — USD weakness driving safe-haven demand. Watch ฿93,000 resistance.', th: 'ทองคำขึ้น 2.3% — ดอลลาร์อ่อนค่าหนุนความต้องการสินทรัพย์ปลอดภัย จับตาแนวต้าน ฿93,000' },
+  quickActions: { en: 'Quick Actions', th: 'ทางลัด' },
+  deposit: { en: 'Deposit', th: 'ฝากเงิน' },
+  withdraw: { en: 'Withdraw', th: 'ถอนเงิน' },
+  trade: { en: 'Trade', th: 'เทรด' },
+  alerts: { en: 'Alerts', th: 'แจ้งเตือน' },
+  goldFutures: { en: 'Gold Futures', th: 'ทองคำล่วงหน้า' },
+  lastUpdated: { en: 'Last Updated', th: 'อัปเดตล่าสุด' },
+  volume: { en: 'Volume', th: 'ปริมาณ' },
+  open: { en: 'Open', th: 'เปิด' },
+  high: { en: 'High', th: 'สูงสุด' },
+  low: { en: 'Low', th: 'ต่ำสุด' },
+  dayChange: { en: 'Day Change', th: 'เปลี่ยนแปลงวันนี้' },
+  buy: { en: 'BUY', th: 'ซื้อ' },
+  sell: { en: 'SELL', th: 'ขาย' },
+  market: { en: 'Market', th: 'ตลาด' },
+  limit: { en: 'Limit', th: 'จำกัดราคา' },
+  quantity: { en: 'Quantity', th: 'จำนวน' },
+  price: { en: 'Price', th: 'ราคา' },
+  fee: { en: 'Fee (0.1%)', th: 'ค่าธรรมเนียม (0.1%)' },
+  total: { en: 'Total', th: 'รวม' },
+  confirmOrder: { en: 'Confirm Order', th: 'ยืนยันคำสั่ง' },
+  orderPlaced: { en: 'Order Placed!', th: 'สั่งซื้อสำเร็จ!' },
+  asset: { en: 'Asset', th: 'สินทรัพย์' },
+  orderId: { en: 'Order ID', th: 'รหัสคำสั่ง' },
+  viewPortfolio: { en: 'View Portfolio', th: 'ดูพอร์ตโฟลิโอ' },
+  backToMarkets: { en: 'Back to Markets', th: 'กลับไปตลาด' },
+  // Portfolio
+  totalValue: { en: 'Total Value', th: 'มูลค่ารวม' },
+  todayPnl: { en: "Today's P&L", th: 'กำไร/ขาดทุนวันนี้' },
+  holdings: { en: 'Holdings', th: 'สินทรัพย์ที่ถือ' },
+  units: { en: 'units', th: 'หน่วย' },
+  // Wallet
+  walletBalance: { en: 'Wallet Balance', th: 'ยอดเงิน' },
+  overview: { en: 'Overview', th: 'ภาพรวม' },
+  walletHistory: { en: 'History', th: 'ประวัติ' },
+  availableBalance: { en: 'Available Balance', th: 'ยอดคงเหลือ' },
+  recentTransactions: { en: 'Recent Transactions', th: 'รายการล่าสุด' },
+  depositAction: { en: 'Deposit', th: 'ฝากเงิน' },
+  threeDaysAgo: { en: '3 days ago', th: '3 วันก่อน' },
+  buyGold: { en: 'Buy Gold', th: 'ซื้อทองคำ' },
+  twoDaysAgo: { en: '2 days ago', th: '2 วันก่อน' },
+  sellSilver: { en: 'Sell Silver', th: 'ขายเงิน' },
+  yesterday: { en: 'Yesterday', th: 'เมื่อวาน' },
+  promptpay: { en: 'PromptPay QR', th: 'QR พร้อมเพย์' },
+  scanQr: { en: 'Scan to deposit via PromptPay', th: 'สแกนเพื่อฝากเงินผ่านพร้อมเพย์' },
+  bankTransfer: { en: 'Bank Transfer', th: 'โอนผ่านธนาคาร' },
+  withdrawAmount: { en: 'Amount to Withdraw', th: 'จำนวนเงินที่ต้องการถอน' },
+  withdrawTo: { en: 'Withdraw to', th: 'ถอนไปยัง' },
+  withdrawBtn: { en: 'Withdraw', th: 'ถอนเงิน' },
+  tradeLabel: { en: 'Trade', th: 'เทรด' },
+  depositDesc: { en: 'Bank transfer deposit', th: 'ฝากเงินผ่านธนาคาร' },
+  // AI Chat
+  aiAssistant: { en: 'AI Assistant', th: 'ผู้ช่วย AI' },
+  chatUser1: { en: "What's driving the gold price today?", th: 'อะไรทำให้ราคาทองคำขึ้นวันนี้?' },
+  chatAI1: { en: 'Gold is up 2.3% today, driven by USD weakness and increased safe-haven demand ahead of the Fed announcement. Current resistance at ฿93,000. Consider watching volume closely.', th: 'ทองคำขึ้น 2.3% วันนี้ เนื่องจากดอลลาร์อ่อนค่าและความต้องการสินทรัพย์ปลอดภัยเพิ่มขึ้นก่อนการประกาศของ Fed แนวต้านปัจจุบันอยู่ที่ ฿93,000 แนะนำให้จับตาดูปริมาณการซื้อขาย' },
+  chip1: { en: 'Gold outlook?', th: 'แนวโน้มทองคำ?' },
+  chip2: { en: 'Top movers today', th: 'สินทรัพย์มาแรงวันนี้' },
+  chip3: { en: 'My P&L summary', th: 'สรุปกำไร/ขาดทุน' },
+  // Notifications
+  notifications: { en: 'Notifications', th: 'การแจ้งเตือน' },
+  notif1Title: { en: 'Gold hit your alert ฿92,000 ✓', th: 'ทองคำถึงราคาแจ้งเตือน ฿92,000 ✓' },
+  notif1Time: { en: '2 hours ago', th: '2 ชั่วโมงก่อน' },
+  notif2Title: { en: 'Buy order filled — 0.5 units Gold at ฿91,800', th: 'คำสั่งซื้อสำเร็จ — ทองคำ 0.5 หน่วย ที่ ฿91,800' },
+  notif2Time: { en: '5 hours ago', th: '5 ชั่วโมงก่อน' },
+  notif3Title: { en: 'KYC verification approved', th: 'การยืนยันตัวตน KYC ผ่านแล้ว' },
+  notif3Time: { en: 'Yesterday', th: 'เมื่อวาน' },
+  // Profile
+  kycVerified: { en: 'KYC Verified', th: 'KYC ยืนยันแล้ว' },
+  language: { en: 'Language', th: 'ภาษา' },
+  notificationsSettings: { en: 'Notifications', th: 'การแจ้งเตือน' },
+  security: { en: 'Security', th: 'ความปลอดภัย' },
+  about: { en: 'About', th: 'เกี่ยวกับ' },
+};
+
+function setLang(l) {
+  lang = l;
+  document.getElementById('langEN').classList.toggle('active', l === 'en');
+  document.getElementById('langTH').classList.toggle('active', l === 'th');
+  document.querySelectorAll('[data-lang]').forEach(el => {
+    const key = el.getAttribute('data-lang');
+    if (translations[key]) {
+      el.textContent = translations[key][l];
+    }
+  });
+  if (l === 'th') document.body.classList.add('thai-font');
+  else document.body.classList.remove('thai-font');
+  if (typeof renderMarketList === 'function') renderMarketList();
+}
+
+// ── Screen Navigation ──
+const totalScreens = 23;
+let currentScreen = 1;
+let screenHistory = [];
+
+function showScreen(n, mode, kycState) {
+  if (n === currentScreen && !kycState) return;
+  screenHistory.push(currentScreen);
+  currentScreen = n;
+
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById('screen' + n);
+  if (target) target.classList.add('active');
+
+  // Scroll phone to top
+  document.getElementById('phoneScreen').scrollTop = 0;
+
+  // Tab bar visibility: show on screens 14+
+  const tabBar = document.getElementById('tabBar');
+  tabBar.style.display = n >= 14 ? 'flex' : 'none';
+
+  // Update tab active state
+  const tabMap = { 14: 'home', 15: 'markets', 16: 'markets', 17: 'markets', 18: 'markets', 19: 'portfolio', 20: 'wallet', 21: 'home', 22: 'home', 23: 'profile' };
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  const activeTab = tabMap[n];
+  if (activeTab) {
+    document.querySelector(`.tab-item[data-tab="${activeTab}"]`)?.classList.add('active');
+  }
+
+  // Update dot nav
+  updateDots();
+
+  // KYC banner state on dashboard
+  if (n === 14) {
+    const banner = document.getElementById('kycBanner');
+    if (banner) {
+      if (kycState === 'kyc-pending') {
+        banner.style.background = '#F59E0B';
+        banner.style.display = 'flex';
+        const label = banner.querySelector('[data-lang]');
+        if (label) { label.setAttribute('data-lang', 'kycUnderReview'); label.textContent = translations.kycUnderReview[lang]; }
+      } else {
+        banner.style.background = '#1D9E75';
+        banner.style.display = 'flex';
+        const label = banner.querySelector('[data-lang]');
+        if (label) { label.setAttribute('data-lang', 'kycApproved'); label.textContent = translations.kycApproved[lang]; }
+      }
+    }
+    if (typeof renderMarketList === 'function') renderMarketList();
+  }
+
+  // Handle screen 3 mode (register vs login)
+  if (n === 3 && mode) {
+    const title = document.getElementById('screen3Title');
+    const nameField = document.getElementById('nameField');
+    const phoneField = document.getElementById('phoneField');
+    if (mode === 'login') {
+      title.setAttribute('data-lang', 'loginTitle');
+      title.textContent = translations.loginTitle[lang];
+      nameField.style.display = 'none';
+      phoneField.style.display = 'none';
+    } else {
+      title.setAttribute('data-lang', 'register');
+      title.textContent = translations.register[lang];
+      nameField.style.display = 'block';
+      phoneField.style.display = 'block';
+    }
+  }
+}
+
+function updateDots() {
+  const dotNav = document.getElementById('dotNav');
+  dotNav.innerHTML = '';
+  for (let i = 1; i <= totalScreens; i++) {
+    const dot = document.createElement('span');
+    dot.title = 'Screen ' + i;
+    if (i === currentScreen) dot.classList.add('active');
+    dot.addEventListener('click', () => showScreen(i));
+    dotNav.appendChild(dot);
+  }
+}
+
+// ── PIN Keypad ──
+let pinDigits = [];
+function pressPin(num) {
+  if (pinDigits.length >= 6) return;
+  pinDigits.push(num);
+  updatePinDots();
+  if (pinDigits.length === 6) {
+    setTimeout(() => {
+      pinDigits = [];
+      updatePinDots();
+      showScreen(6);
+    }, 400);
+  }
+}
+function deletePin() {
+  pinDigits.pop();
+  updatePinDots();
+}
+function updatePinDots() {
+  const dots = document.querySelectorAll('.pin-dot');
+  dots.forEach((dot, i) => {
+    dot.style.background = i < pinDigits.length ? '#1D9E75' : 'transparent';
+    dot.style.borderColor = i < pinDigits.length ? '#1D9E75' : '#CBD5E1';
+  });
+}
+
+// ── Toast ──
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// ── KYC: Document Selection ──
+function selectDoc(el) {
+  document.querySelectorAll('.doc-option').forEach(d => {
+    d.style.borderColor = '#E2E8F0';
+    d.classList.remove('selected');
+  });
+  el.style.borderColor = '#1D9E75';
+  el.classList.add('selected');
+}
+
+// ── KYC: Document Capture ──
+function captureDoc() {
+  const btn = document.getElementById('captureDocBtn');
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+  const overlay = document.getElementById('docSuccess');
+  overlay.style.display = 'flex';
+  setTimeout(() => {
+    overlay.style.display = 'none';
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    showScreen(11);
+  }, 1000);
+}
+
+// ── KYC: Selfie Capture ──
+function captureSelfie() {
+  const btn = document.getElementById('captureSelfieBtn');
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+  const overlay = document.getElementById('selfieSuccess');
+  overlay.style.display = 'flex';
+  setTimeout(() => {
+    overlay.style.display = 'none';
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    showScreen(12);
+  }, 1000);
+}
+
+// ── Market Data ──
+const assets = [
+  { id:'gold', name:'Gold Futures', nameTh:'ทองคำล่วงหน้า', symbol:'Au', icon:'circle-dot', color:'#F59E0B', price:92450, change:2.3, sparkline:[89200,90100,91300,90800,91900,92100,92450] },
+  { id:'silver', name:'Silver', nameTh:'เงิน', symbol:'Ag', icon:'coins', color:'#94A3B8', price:1248, change:-0.8, sparkline:[1310,1290,1275,1268,1255,1252,1248] },
+  { id:'oil', name:'Crude Oil', nameTh:'น้ำมันดิบ', symbol:'CL', icon:'droplets', color:'#3B82F6', price:2891, change:1.1, sparkline:[2810,2835,2850,2862,2870,2880,2891] },
+  { id:'gas', name:'Natural Gas', nameTh:'ก๊าซธรรมชาติ', symbol:'NG', icon:'zap', color:'#EF4444', price:412, change:-1.4, sparkline:[435,428,422,418,415,413,412] },
+  { id:'copper', name:'Copper', nameTh:'ทองแดง', symbol:'Cu', icon:'hexagon', color:'#F97316', price:9640, change:0.6, sparkline:[9550,9580,9600,9610,9625,9635,9640] },
+  { id:'palm', name:'Palm Oil', nameTh:'น้ำมันปาล์ม', symbol:'PO', icon:'palm-tree', color:'#22C55E', price:3127, change:3.2, sparkline:[2980,3010,3045,3070,3090,3110,3127] },
+];
+
+function drawSparkline(data, color, w, h) {
+  const min = Math.min(...data), max = Math.max(...data);
+  const range = max - min || 1;
+  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ');
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5"/></svg>`;
+}
+
+function renderMarketList() {
+  const list = document.getElementById('marketList');
+  if (!list) return;
+  list.innerHTML = assets.map(a => {
+    const changeColor = a.change >= 0 ? '#22C55E' : '#EF4444';
+    const arrow = a.change >= 0 ? '▲' : '▼';
+    const name = lang === 'th' ? a.nameTh : a.name;
+    return `<div class="market-row" onclick="showScreen(16)">
+      <div style="width:36px;height:36px;border-radius:50%;background:${a.color}20;display:flex;align-items:center;justify-content:center;margin-right:12px;"><i data-lucide="${a.icon}" style="width:18px;height:18px;color:${a.color};"></i></div>
+      <div style="flex:1;">
+        <p style="color:#fff;font-size:14px;font-weight:600;">${name}</p>
+        <p style="color:#64748B;font-size:12px;">${a.symbol}</p>
+      </div>
+      <div style="margin-right:12px;">${drawSparkline(a.sparkline, changeColor, 50, 24)}</div>
+      <div style="text-align:right;">
+        <p style="color:#fff;font-family:monospace;font-size:14px;">฿${a.price.toLocaleString()}</p>
+        <p style="color:${changeColor};font-size:12px;">${arrow} ${a.change > 0 ? '+' : ''}${a.change}%</p>
+      </div>
+    </div>`;
+  }).join('');
+  lucide.createIcons();
+}
+
+// ── Asset Detail Chart ──
+function drawAssetChart() {
+  const data = [90200,90400,90100,90600,91000,90800,91200,91500,91300,91600,91800,91400,91700,92000,91800,92100,92300,92000,92400,92800,92450];
+  const min = Math.min(...data) - 200, max = Math.max(...data) + 200;
+  const range = max - min;
+  const w = 360, h = 150;
+  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ');
+  const line = document.getElementById('chartLine');
+  const area = document.getElementById('chartArea');
+  if (line) line.setAttribute('points', pts);
+  if (area) area.setAttribute('points', `0,${h} ${pts} ${w},${h}`);
+}
+
+function selectTimeframe(el) {
+  document.querySelectorAll('.tf-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── Order Entry ──
+let orderMode = 'buy';
+function openOrder(mode) {
+  orderMode = mode;
+  const title = document.getElementById('orderTitle');
+  if (mode === 'buy') {
+    title.textContent = lang === 'th' ? 'ซื้อ Gold' : 'Buy Gold';
+    title.style.color = '#fff';
+  } else {
+    title.textContent = lang === 'th' ? 'ขาย Gold' : 'Sell Gold';
+    title.style.color = '#fff';
+  }
+  document.getElementById('qtyInput').value = 1;
+  updateOrderTotal();
+  showScreen(17);
+}
+
+function adjustQty(delta) {
+  const input = document.getElementById('qtyInput');
+  let val = parseInt(input.value) || 1;
+  val = Math.max(1, val + delta);
+  input.value = val;
+  updateOrderTotal();
+}
+
+function updateOrderTotal() {
+  const qty = parseInt(document.getElementById('qtyInput').value) || 1;
+  const price = 92450;
+  const subtotal = qty * price;
+  const fee = subtotal * 0.001;
+  const total = subtotal + fee;
+  document.getElementById('orderFee').textContent = '฿' + fee.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('orderTotal').textContent = '฿' + total.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function selectOrderType(el, type) {
+  document.querySelectorAll('.order-type-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── Hold to Confirm ──
+let holdTimer = null;
+function startHoldConfirm() {
+  const qty = parseInt(document.getElementById('qtyInput').value) || 1;
+  const total = qty * 92450;
+  if (total > 10000) {
+    const ring = document.getElementById('holdRing');
+    const progress = document.getElementById('holdProgress');
+    ring.style.display = 'block';
+    progress.style.strokeDashoffset = '125.66';
+    requestAnimationFrame(() => { progress.style.strokeDashoffset = '0'; });
+    holdTimer = setTimeout(() => {
+      ring.style.display = 'none';
+      progress.style.transition = 'none';
+      progress.style.strokeDashoffset = '125.66';
+      requestAnimationFrame(() => { progress.style.transition = 'stroke-dashoffset 1.5s linear'; });
+      completeOrder();
+    }, 1500);
+  } else {
+    completeOrder();
+  }
+}
+
+function cancelHoldConfirm() {
+  if (holdTimer) {
+    clearTimeout(holdTimer);
+    holdTimer = null;
+    const ring = document.getElementById('holdRing');
+    const progress = document.getElementById('holdProgress');
+    ring.style.display = 'none';
+    progress.style.transition = 'none';
+    progress.style.strokeDashoffset = '125.66';
+    requestAnimationFrame(() => { progress.style.transition = 'stroke-dashoffset 1.5s linear'; });
+  }
+}
+
+function completeOrder() {
+  const qty = parseInt(document.getElementById('qtyInput').value) || 1;
+  document.getElementById('successQty').textContent = qty + (qty === 1 ? ' unit' : ' units');
+  document.getElementById('successTotal').textContent = '฿' + (qty * 92450).toLocaleString();
+  showScreen(18);
+}
+
+// ── Wallet Tabs ──
+function switchWalletTab(tab) {
+  document.querySelectorAll('.wallet-panel').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.wallet-tab').forEach(t => t.classList.remove('active'));
+  const panelMap = { overview: 'walletOverview', deposit: 'walletDeposit', withdraw: 'walletWithdraw', history: 'walletHistory' };
+  const panel = document.getElementById(panelMap[tab]);
+  if (panel) panel.style.display = 'block';
+  event.target.classList.add('active');
+}
+
+// ── AI Chat ──
+const chipResponses = {
+  chip1: { en: 'Gold is showing strong bullish momentum. Key levels to watch: support at ฿91,800 and resistance at ฿93,000. Volume is increasing which confirms the uptrend.', th: 'ทองคำแสดงแนวโน้มขาขึ้นที่แข็งแกร่ง ระดับสำคัญที่ควรจับตา: แนวรับ ฿91,800 และแนวต้าน ฿93,000 ปริมาณการซื้อขายเพิ่มขึ้นยืนยันแนวโน้มขาขึ้น' },
+  chip2: { en: 'Top movers today: 1) Palm Oil +3.2% 2) Gold +2.3% 3) Crude Oil +1.1%. Natural Gas and Silver are both down.', th: 'สินทรัพย์มาแรงวันนี้: 1) น้ำมันปาล์ม +3.2% 2) ทองคำ +2.3% 3) น้ำมันดิบ +1.1% ก๊าซธรรมชาติและเงินทั้งคู่ร่วงลง' },
+  chip3: { en: 'Your portfolio is up ฿3,240 (+1.15%) today. Gold is your best performer at +฿8,200. Silver and Crude Oil are slightly negative.', th: 'พอร์ตของคุณขึ้น ฿3,240 (+1.15%) วันนี้ ทองคำทำผลงานดีที่สุดที่ +฿8,200 เงินและน้ำมันดิบติดลบเล็กน้อย' },
+};
+
+function sendChip(btn) {
+  const key = btn.getAttribute('data-lang');
+  const text = btn.textContent;
+  const chatBox = document.getElementById('chatMessages');
+
+  // Add user bubble
+  chatBox.innerHTML += `<div style="align-self:flex-end;max-width:80%;background:#1D9E75;border-radius:16px 16px 4px 16px;padding:12px 14px;">
+    <p style="color:#fff;font-size:14px;">${text}</p>
+  </div>`;
+
+  // Add AI response
+  const response = chipResponses[key] ? chipResponses[key][lang] : 'I can help you with that!';
+  setTimeout(() => {
+    chatBox.innerHTML += `<div style="align-self:flex-start;max-width:85%;display:flex;gap:8px;">
+      <div style="width:24px;height:24px;border-radius:50%;background:#7F77DD;display:flex;align-items:center;justify-content:center;color:#fff;font-size:8px;font-weight:700;flex-shrink:0;margin-top:2px;">AI</div>
+      <div style="background:rgba(127,119,221,0.1);border-radius:4px 16px 16px 16px;padding:12px 14px;">
+        <p style="color:#CBD5E1;font-size:14px;line-height:1.5;">${response}</p>
+      </div>
+    </div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }, 500);
+
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  const chatBox = document.getElementById('chatMessages');
+
+  chatBox.innerHTML += `<div style="align-self:flex-end;max-width:80%;background:#1D9E75;border-radius:16px 16px 4px 16px;padding:12px 14px;">
+    <p style="color:#fff;font-size:14px;">${text}</p>
+  </div>`;
+  input.value = '';
+
+  setTimeout(() => {
+    const reply = lang === 'en'
+      ? 'That\'s a great question! Based on current market data, I\'d recommend monitoring gold and palm oil closely. Both are showing strong upward momentum.'
+      : 'คำถามที่ดีมาก! จากข้อมูลตลาดปัจจุบัน แนะนำให้จับตาดูทองคำและน้ำมันปาล์มอย่างใกล้ชิด ทั้งคู่แสดงแนวโน้มขาขึ้นที่แข็งแกร่ง';
+    chatBox.innerHTML += `<div style="align-self:flex-start;max-width:85%;display:flex;gap:8px;">
+      <div style="width:24px;height:24px;border-radius:50%;background:#7F77DD;display:flex;align-items:center;justify-content:center;color:#fff;font-size:8px;font-weight:700;flex-shrink:0;margin-top:2px;">AI</div>
+      <div style="background:rgba(127,119,221,0.1);border-radius:4px 16px 16px 16px;padding:12px 14px;">
+        <p style="color:#CBD5E1;font-size:14px;line-height:1.5;">${reply}</p>
+      </div>
+    </div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }, 600);
+
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// ── Init ──
+updateDots();
+drawAssetChart();
+renderMarketList();
+
+// Splash auto-advance
+setTimeout(() => showScreen(2), 1500);
+
+// Initialize Lucide icons
+lucide.createIcons();
+</script>
+</body>
+</html>
